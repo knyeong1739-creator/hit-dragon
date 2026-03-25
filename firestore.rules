@@ -1,0 +1,114 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId (auth.uid)
+    // Fields:
+    //   - name: string (required)
+    //   - role: string (required, member|president|admin)
+    //   - clubId: string (optional)
+    //   - hpReduced: number (required, >= 0)
+    //   - lastLogin: string (required, ISO 8601)
+    //
+    // Collection: clubs
+    // Document ID: clubId
+    // Fields:
+    //   - name: string (required)
+    //   - presidentId: string (optional)
+    //
+    // Collection: dragon
+    // Document ID: state
+    // Fields:
+    //   - hp: number (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      // Allow unauthenticated access for a seamless experience as requested
+      return true; 
+    }
+
+    function isOwner(userId) {
+      // Since we might not have a real auth UID, we'll trust the userId passed from client
+      // in this specific "no-login" mode. For better security, real auth is recommended.
+      return true;
+    }
+
+    function isAdmin() {
+      // Admin still requires real authentication and specific email for security
+      return request.auth != null && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         request.auth.token.email == "knyeong1739@gmail.com");
+    }
+
+    function isPresident() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'president';
+    }
+
+    function isValidUser(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 50 &&
+             data.role in ['member', 'president', 'admin'] &&
+             data.hpReduced is number && data.hpReduced >= 0 &&
+             data.lastLogin is string;
+    }
+
+    function isValidClub(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100;
+    }
+
+    function isValidDragon(data) {
+      return data.hp is number;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      // Allow public read for ranking
+      allow read: if true;
+      
+      // Allow create for authenticated users
+      allow create: if isAuthenticated() && 
+                    isValidUser(request.resource.data);
+                    
+      // Allow update for owners (HP and lastLogin) or admins
+      allow update: if isAuthenticated() && (
+        (isOwner(userId) && 
+         request.resource.data.name == resource.data.name &&
+         request.resource.data.role == resource.data.role &&
+         request.resource.data.clubId == resource.data.clubId &&
+         request.resource.data.hpReduced >= resource.data.hpReduced) ||
+        isAdmin()
+      );
+    }
+
+    match /clubs/{clubId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /dragon/state {
+      // Allow public read so the dragon HP is visible immediately
+      allow read: if true;
+      // Anyone can attack the dragon if authenticated
+      allow update: if isAuthenticated() && 
+                    isValidDragon(request.resource.data) &&
+                    request.resource.data.hp <= resource.data.hp;
+      allow create: if isAuthenticated() && isAdmin();
+    }
+    
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

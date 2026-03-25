@@ -1,0 +1,41 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Application user profile",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "User's display name" },
+        "role": { "type": "string", "enum": ["admin", "president", "member"], "description": "User's role" },
+        "clubId": { "type": "string", "description": "ID of the club the user belongs to" },
+        "hpReduced": { "type": "number", "description": "Total HP reduced by this user" },
+        "lastLogin": { "type": "string", "format": "date-time", "description": "Last login timestamp" }
+      },
+      "required": ["name", "role", "hpReduced"]
+    },
+    "Club": {
+      "title": "Club",
+      "description": "Club information",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Club name" },
+        "presidentId": { "type": "string", "description": "UID of the club president" }
+      },
+      "required": ["name"]
+    },
+    "Dragon": {
+      "title": "Dragon",
+      "description": "Global dragon state",
+      "type": "object",
+      "properties": {
+        "hp": { "type": "number", "description": "Current HP of the dragon" }
+      },
+      "required": ["hp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/clubs/{clubId}": { "schema": "Club", "description": "Club records" },
+    "/dragon/state": { "schema": "Dragon", "description": "Global dragon HP state" }
+  }
+}
