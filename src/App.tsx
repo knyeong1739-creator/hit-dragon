@@ -365,9 +365,9 @@ export default function App() {
                     className="relative z-10"
                   >
                     {myDragonHp <= 0 ? (
-                      <img src="https://i.imgur.com/fIBT70D.png" className="w-64 h-64 object-contain opacity-30 grayscale" />
+                      <img src="https://i.imgur.com/fIBT70D.png" className="w-32 h-32 object-contain opacity-30 grayscale" />
                     ) : (
-                      <img src="https://i.imgur.com/fIBT70D.png" className="w-64 h-64 object-contain" />
+                      <img src="https://i.imgur.com/fIBT70D.png" className="w-32 h-32 object-contain" />
                     )}
                   </motion.div>
 
