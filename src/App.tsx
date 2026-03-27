@@ -215,7 +215,7 @@ function BattleScene({ dragonHp, attacking, superAttacking }: {
         ? { x: [0, -3, 3, -2, 2, 0] }
         : phase === 'wounded'
           ? { x: [0, -1, 1, 0] }
-          : {};
+          : { x: 0 };
 
   const dragonIdleTransition = attacking
     ? { duration: 0.4 }
