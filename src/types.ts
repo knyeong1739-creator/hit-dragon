@@ -8,6 +8,9 @@ export interface UserProfile {
   hpReduced: number;
   dragonHp?: number;
   lastLogin: string;
+  streak?: number;
+  lastAttackDate?: string;
+  tripleUsed?: boolean;
 }
 
 export interface Club {
