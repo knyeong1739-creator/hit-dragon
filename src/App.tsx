@@ -746,6 +746,12 @@ export default function App() {
             <p className="text-[#FFD700] text-[8px]">SCORE</p>
             <p className="text-white text-[10px] mt-1">{String(profile.hpReduced).padStart(6, '0')}</p>
           </div>
+          <div className="text-center" style={marioStyle}>
+            <p className="text-[#FFD700] text-[8px]">D-DAY</p>
+            <p className="text-white text-[10px] mt-1">
+              D-{Math.max(0, Math.ceil((new Date('2026-04-30').getTime() - new Date().getTime()) / 86400000))}
+            </p>
+          </div>
           <div className="flex items-center gap-2">
             <div style={marioStyle}>
               <p className="text-[#FFD700] text-[8px]">🔥 {myStreak}</p>
