@@ -215,7 +215,7 @@ function BattleScene({ dragonHp, attacking, superAttacking }: {
         ? { x: [0, -3, 3, -2, 2, 0] }
         : phase === 'wounded'
           ? { x: [0, -1, 1, 0] }
-          : { x: 0 };
+          : { x:0 };
 
   const dragonIdleTransition = attacking
     ? { duration: 0.4 }
@@ -835,7 +835,7 @@ export default function App() {
 
             {activeTab === 'ranking' && <RankingView key="ranking" />}
             {activeTab === 'admin' && profile.role === 'admin' && <AdminView key="admin" />}
-            {activeTab === 'club' && profile.role === 'president' && (
+            {activeTab === 'club' && (profile.role === 'president' || profile.role === 'team_leader') && (
               <PresidentView key="club" clubId={profile.clubId!} />
             )}
           </AnimatePresence>
@@ -846,7 +846,7 @@ export default function App() {
           <div className="max-w-2xl mx-auto flex justify-around items-center">
             <NavButton active={activeTab === 'main'} onClick={() => setActiveTab('main')} label="🗡️" sub="FIGHT" />
             <NavButton active={activeTab === 'ranking'} onClick={() => setActiveTab('ranking')} label="🏆" sub="RANK" />
-            {profile.role === 'president' && (
+            {(profile.role === 'president' || profile.role === 'team_leader') && (
               <NavButton active={activeTab === 'club'} onClick={() => setActiveTab('club')} label="👥" sub="CLUB" />
             )}
             {profile.role === 'admin' && (
@@ -884,7 +884,7 @@ function RankingView() {
   useEffect(() => {
     const q = query(
       collection(db, 'users'),
-      where('role', 'in', ['member', 'president']),
+      where('role', 'in', ['member', 'team_leader', 'president']),
       orderBy('hpReduced', 'desc'),
       limit(20)
     );
@@ -1028,6 +1028,7 @@ function AdminUserManagement() {
                 style={marioStyle}
               >
                 <option value="member">MEMBER</option>
+                <option value="team_leader">TEAM LEADER</option>
                 <option value="president">PRESIDENT</option>
                 <option value="admin">ADMIN</option>
               </select>
@@ -1137,6 +1138,23 @@ function AdminUserStatus() {
 
 function PresidentView({ clubId }: { clubId: string }) {
   const [members, setMembers] = useState<UserProfile[]>([]);
+  const [newName, setNewName] = useState('');
+
+  const addMember = async () => {
+    if (!newName.trim()) return;
+    try {
+      const q = query(collection(db, 'users'), where('name', '==', newName.trim()), limit(1));
+      const snap = await getDocs(q);
+      if (!snap.empty) { alert('이미 존재하는 이름입니다.'); return; }
+      await setDoc(doc(db, 'users', `pending_${Date.now()}`), {
+        name: newName.trim(), role: 'member', clubId: clubId,
+        hpReduced: 0, streak: 0, lastAttackDate: '', lastLogin: 'Never',
+      });
+      setNewName('');
+    } catch (err: any) {
+      alert('추가 실패: ' + err.message);
+    }
+  };
 
   useEffect(() => {
     const q = query(collection(db, 'users'), where('clubId', '==', clubId));
@@ -1150,6 +1168,19 @@ function PresidentView({ clubId }: { clubId: string }) {
       <div className="bg-[#E52521] border-4 border-black p-3 shadow-[4px_4px_0px_black] flex justify-between items-center">
         <h2 className="text-[#FFD700] text-[10px]" style={marioStyle}>👥 MY GUILD</h2>
         <span className="text-white text-[8px]" style={marioStyle}>{clubId}</span>
+      </div>
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          placeholder="NEW MEMBER"
+          className="flex-1 px-3 py-2 bg-black text-white border-4 border-white text-[8px] focus:outline-none focus:border-[#FFD700]"
+          style={marioStyle}
+        />
+        <button onClick={addMember} className="p-2 bg-[#FFD700] text-black border-4 border-black shadow-[3px_3px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all">
+          <UserPlus className="w-5 h-5" />
+        </button>
       </div>
       <div className="bg-[#000080] border-4 border-black shadow-[4px_4px_0px_black] overflow-hidden">
         {members.length === 0 && (
