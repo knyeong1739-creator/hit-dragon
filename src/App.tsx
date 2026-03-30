@@ -471,6 +471,21 @@ export default function App() {
   const [loginLoading, setLoginLoading] = useState(false);
 
   useEffect(() => {
+    const audio = new Audio('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/bgm.mp3');
+    audio.loop = true;
+    audio.volume = 0.3;
+    const start = () => {
+      audio.play();
+      document.removeEventListener('click', start);
+    };
+    document.addEventListener('click', start);
+    return () => {
+      document.removeEventListener('click', start);
+      audio.pause();
+    };
+  }, []);
+
+  useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       setUser(u);
       if (!u) { setProfile(null); setLoading(false); }
@@ -576,6 +591,12 @@ export default function App() {
     }
   };
 
+  const playSound = (url: string) => {
+      const audio = new Audio(url);
+      audio.volume = 0.5;
+      audio.play().catch(() => {});
+    };
+
   const reduceHP = async (amount: number, triple = false) => {
     if (!profile || !user || dragonHp <= 0 || attacking) return;
     const today = new Date().toISOString().slice(0, 10);
@@ -590,7 +611,10 @@ export default function App() {
     setAttacking(true);
     if (triple) {
       setSuperAttacking(true);
+      playSound('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/u_vrs223ln83-loud-thunder-439064.mp3');
       setTimeout(() => setSuperAttacking(false), 1000);
+    } else {
+      playSound('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/dragon-studio-sword-slice-2-393845.mp3');
     }
     setTimeout(() => setAttacking(false), 600);
     try {
