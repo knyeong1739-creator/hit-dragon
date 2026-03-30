@@ -797,15 +797,24 @@ export default function App() {
                 <BattleScene dragonHp={dragonHp} attacking={attacking} superAttacking={superAttacking} />
 
                 {/* 일반 공격 버튼 */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-3">
                   <button
                     onClick={() => reduceHP(1)}
                     disabled={dragonHp <= 0 || attacking}
                     className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     style={marioStyle}
                   >
-                    <div className="text-[10px]">1주제 발표</div>
-                    <div className="text-[#FFD700] text-[10px] mt-1">-1 HP</div>
+                    <div className="text-[8px]">1주제 발표</div>
+                    <div className="text-[#FFD700] text-[8px] mt-1">-1 HP</div>
+                  </button>
+                  <button
+                    onClick={() => reduceHP(1)}
+                    disabled={dragonHp <= 0 || attacking}
+                    className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={marioStyle}
+                  >
+                    <div className="text-[8px]">1주제 듣기</div>
+                    <div className="text-[#FFD700] text-[8px] mt-1">-1 HP</div>
                   </button>
                   <button
                     onClick={() => reduceHP(2)}
@@ -813,8 +822,8 @@ export default function App() {
                     className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     style={marioStyle}
                   >
-                    <div className="text-[10px]">1주제 평가</div>
-                    <div className="text-[#FFD700] text-[10px] mt-1">-2 HP</div>
+                    <div className="text-[8px]">1주제 평가</div>
+                    <div className="text-[#FFD700] text-[8px] mt-1">-2 HP</div>
                   </button>
                 </div>
 
