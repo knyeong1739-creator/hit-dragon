@@ -796,7 +796,7 @@ function ComboGauge({
             }}
             whileTap={{ scale: 0.97, x: 2, y: 2 }}
           >
-            🌀 합체 필살기 발동! 🌀
+            🌀 필살기 발동! 🌀
             <br />
             <span style={{ color: '#4B0082', fontSize: '7px' }}>-20 HP COMBO FINISH</span>
           </motion.button>
