@@ -40,11 +40,17 @@ const fontLink = document.createElement('link');
 fontLink.href = 'https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Nanum+Gothic+Coding:wght@400;700&display=swap';
 fontLink.rel = 'stylesheet';
 document.head.appendChild(fontLink);
+const galmuri = document.createElement('link');
+galmuri.href = 'https://cdn.jsdelivr.net/npm/galmuri/dist/galmuri.css';
+galmuri.rel = 'stylesheet';
+document.head.appendChild(galmuri);
+fontLink.rel = 'stylesheet';
+document.head.appendChild(fontLink);
 
 // ─── 상수 ────────────────────────────────────────────────────
 const ADMIN_ID = '관리자0901';
 const ADMIN_PW = '1925';
-const DRAGON_MAX_HP = 5000;
+const DRAGON_MAX_HP = 5000.0;
 const APP_DOMAIN = '@yongdu.app';
 const APP_PASSWORD = 'yongdu2024';
 const COMBO_MAX = 10;
@@ -62,7 +68,7 @@ const DRAGON_IMG_DEAD     = 'https://i.imgur.com/O821V8v.png';
 
 // ─── 마리오 스타일 ────────────────────────────────────────────
 const marioStyle = {
-  fontFamily: "'Press Start 2P', 'Nanum Gothic Coding', monospace",
+  fontFamily: "'Galmuri11', 'Press Start 2P', monospace",
 };
 
 // ─── 유틸 ────────────────────────────────────────────────────
@@ -658,7 +664,7 @@ function BattleScene({
                   </motion.span>
                 )}
                 <span className="text-[#FFD700] text-[8px]" style={marioStyle}>
-                  {Math.max(0, dragonHp)}/{DRAGON_MAX_HP}
+                  {Math.max(0, dragonHp).toFixed(1)}/{DRAGON_MAX_HP.toFixed(1)}
                 </span>
               </div>
             </div>
@@ -990,6 +996,25 @@ export default function App() {
     }
   };
 
+  const handleMission = async () => {
+    if (!profile || !user || dragonHp <= 0 || attacking || ultimateActive) return;
+    const today = new Date().toISOString().slice(0, 10);
+    if (profile.lastMissionDate === today) return;
+    setAttacking(true);
+    playSound('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/dragon-studio-sword-slice-2-393845.mp3');
+    setTimeout(() => setAttacking(false), 600);
+    setCombo((prev) => Math.min(prev + 1, COMBO_MAX));
+    try {
+      await updateDoc(doc(db, 'dragon', 'state'), { hp: increment(-0.5) });
+      await updateDoc(doc(db, 'users', user.uid), {
+        hpReduced: increment(0.5),
+        lastMissionDate: today,
+      });
+    } catch (err) {
+      alert('온라인 선교 오류가 발생했습니다.');
+    }
+  };
+
   const handleUltimate = async () => {
     if (!profile || !user || dragonHp <= 0 || combo < COMBO_MAX || ultimateActive) return;
     setUltimateActive(true);
@@ -1173,7 +1198,7 @@ export default function App() {
                   ultimateActive={ultimateActive}
                   onUltimateComplete={handleUltimateComplete}
                 />
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => reduceHP(1)}
                     disabled={dragonHp <= 0 || attacking || ultimateActive}
@@ -1200,6 +1225,18 @@ export default function App() {
                   >
                     <div className="text-[8px]">1주제 평가</div>
                     <div className="text-[#FFD700] text-[8px] mt-1">-2 HP</div>
+                  </button>
+                  <button
+                    onClick={() => handleMission()}
+                    disabled={dragonHp <= 0 || attacking || ultimateActive || profile.lastMissionDate === new Date().toISOString().slice(0, 10)}
+                    className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={marioStyle}
+                  >
+                    <div className="text-[8px]">온라인 선교</div>
+                    <div className="text-[#FFD700] text-[8px] mt-1">-0.5 HP</div>
+                    {profile.lastMissionDate === new Date().toISOString().slice(0, 10) && (
+                      <div className="text-[#FF8888] text-[7px] mt-1">오늘 완료!</div>
+                    )}
                   </button>
                 </div>
 
