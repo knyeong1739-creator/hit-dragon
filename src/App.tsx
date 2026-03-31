@@ -396,7 +396,8 @@ function UltimateSkillScene({ onComplete }: { onComplete: () => void }) {
           <p className="text-[#FFD700] text-sm mb-2" style={marioStyle}>
             💥 COMBO FINISH! 💥
           </p>
-          <p className="text-white text-[8px]" style={marioStyle}>
+          {/* 8px → 15px */}
+          <p className="text-white text-[15px]" style={marioStyle}>
             -20 HP DEALT!
           </p>
         </motion.div>
@@ -651,11 +652,13 @@ function BattleScene({
         {dragonHp > 0 && (
           <div className="bg-black/60 p-2 border-2 border-black">
             <div className="flex justify-between items-center mb-1">
-              <span className="text-white text-[8px]" style={marioStyle}>🐉 BOSS HP</span>
+              {/* 8px → 15px */}
+              <span className="text-white text-[15px]" style={marioStyle}>🐉 BOSS HP</span>
               <div className="flex items-center gap-2">
                 {phaseLabel && (
                   <motion.span
-                    className="text-[7px]"
+                    // 7px → 13px
+                    className="text-[13px]"
                     style={{ ...marioStyle, color: phaseLabel.color }}
                     animate={{ opacity: [1, 0.2, 1] }}
                     transition={{ duration: phase === 'dying' ? 0.5 : 1, repeat: Infinity }}
@@ -663,7 +666,8 @@ function BattleScene({
                     {phaseLabel.text}
                   </motion.span>
                 )}
-                <span className="text-[#FFD700] text-[8px]" style={marioStyle}>
+                {/* 8px → 15px */}
+                <span className="text-[#FFD700] text-[15px]" style={marioStyle}>
                   {Math.max(0, dragonHp).toFixed(1)}/{DRAGON_MAX_HP.toFixed(1)}
                 </span>
               </div>
@@ -724,14 +728,16 @@ function ComboGauge({
     >
       <div className="flex items-center justify-between mb-2">
         <motion.span
-          className="text-[8px]"
+          // 8px → 15px
+          className="text-[15px]"
           style={{ ...marioStyle, color: isFull ? '#FFD700' : '#AA88FF' }}
           animate={isFull ? { opacity: [1, 0.3, 1] } : { opacity: 1 }}
           transition={isFull ? { duration: 0.6, repeat: Infinity } : {}}
         >
           ⚔️ COMBO GAUGE
         </motion.span>
-        <span className="text-[8px]" style={{ ...marioStyle, color: isFull ? '#FFD700' : '#FFFFFF' }}>
+        {/* 8px → 15px */}
+        <span className="text-[15px]" style={{ ...marioStyle, color: isFull ? '#FFD700' : '#FFFFFF' }}>
           {combo} / {maxCombo}
         </span>
       </div>
@@ -794,7 +800,8 @@ function ComboGauge({
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={onUltimate}
             disabled={disabled}
-            className="w-full py-3 border-4 border-black text-black text-[9px] disabled:opacity-60 disabled:cursor-not-allowed"
+            // 9px → 16px
+            className="w-full py-3 border-4 border-black text-black text-[16px] disabled:opacity-60 disabled:cursor-not-allowed"
             style={{
               ...marioStyle,
               background: 'linear-gradient(135deg, #FFD700, #FF8C00, #FFD700)',
@@ -804,13 +811,15 @@ function ComboGauge({
           >
             🌀 필살기 발동! 🌀
             <br />
-            <span style={{ color: '#4B0082', fontSize: '7px' }}>-20 HP COMBO FINISH</span>
+            {/* 7px → 13px */}
+            <span style={{ color: '#4B0082', fontSize: '13px' }}>-20 HP COMBO FINISH</span>
           </motion.button>
         )}
       </AnimatePresence>
 
       {!isFull && (
-        <p className="text-center text-[7px] text-[#AA88FF]" style={marioStyle}>
+        // 7px → 13px
+        <p className="text-center text-[13px] text-[#AA88FF]" style={marioStyle}>
           공격 {maxCombo - combo}회 더 하면 필살기 해금!
         </p>
       )}
@@ -1018,7 +1027,7 @@ export default function App() {
   const handleUltimate = async () => {
     if (!profile || !user || dragonHp <= 0 || combo < COMBO_MAX || ultimateActive) return;
     setUltimateActive(true);
-    playSound('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/u_vrs223ln83-loud-thunder-439064.mp3');
+    playSound('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/freesound_crunchpixstudio-hero-skill-attack-reveal-2-384976.mp3');
   };
 
   const handleUltimateComplete = async () => {
@@ -1060,20 +1069,22 @@ export default function App() {
         >
           <div className="bg-[#E52521] border-4 border-black p-6 shadow-[6px_6px_0px_black] mb-6">
             <div className="flex justify-center mb-4">
-              <img 
-                src="https://i.imgur.com/7avvYMk.png" 
-                className="w-full object-contain rounded-lg" 
+              <img
+                src="https://i.imgur.com/7avvYMk.png"
+                className="w-full object-contain rounded-lg"
                 alt="용두백타"
               />
             </div>
             <h1 className="text-white text-center text-lg mb-1" style={marioStyle}>용두백타</h1>
-            <p className="text-[#FFD700] text-center text-[8px] mt-2" style={marioStyle}>START</p>
+            {/* 8px → 15px */}
+            <p className="text-[#FFD700] text-center text-[15px] mt-2" style={marioStyle}>START</p>
           </div>
           <div className="bg-[#000080] border-4 border-black p-6 shadow-[6px_6px_0px_black]">
             {!showAdminLogin ? (
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
-                  <label className="text-white text-[8px] block mb-2" style={marioStyle}>PLAYER NAME</label>
+                  {/* 8px → 15px */}
+                  <label className="text-white text-[15px] block mb-2" style={marioStyle}>PLAYER NAME</label>
                   <input
                     type="text"
                     value={loginName}
@@ -1095,7 +1106,8 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setShowAdminLogin(true)}
-                  className="w-full py-2 text-[#888] text-[8px] hover:text-white transition"
+                  // 8px → 15px
+                  className="w-full py-2 text-[#888] text-[15px] hover:text-white transition"
                   style={marioStyle}
                 >
                   ADMIN LOGIN
@@ -1104,7 +1116,8 @@ export default function App() {
             ) : (
               <form onSubmit={handleAdminLogin} className="space-y-4">
                 <div>
-                  <label className="text-white text-[8px] block mb-2" style={marioStyle}>ADMIN ID</label>
+                  {/* 8px → 15px */}
+                  <label className="text-white text-[15px] block mb-2" style={marioStyle}>ADMIN ID</label>
                   <input
                     type="text"
                     value={adminId}
@@ -1115,7 +1128,8 @@ export default function App() {
                   />
                 </div>
                 <div>
-                  <label className="text-white text-[8px] block mb-2" style={marioStyle}>PASSWORD</label>
+                  {/* 8px → 15px */}
+                  <label className="text-white text-[15px] block mb-2" style={marioStyle}>PASSWORD</label>
                   <input
                     type="password"
                     value={adminPw}
@@ -1136,7 +1150,8 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setShowAdminLogin(false)}
-                  className="w-full py-2 text-[#888] text-[8px] hover:text-white transition"
+                  // 8px → 15px
+                  className="w-full py-2 text-[#888] text-[15px] hover:text-white transition"
                   style={marioStyle}
                 >
                   ◀ BACK
@@ -1164,22 +1179,26 @@ export default function App() {
 
         <header className="relative z-10 px-4 py-3 flex justify-between items-center bg-[#E52521] border-b-4 border-black">
           <div style={marioStyle}>
-            <p className="text-[#FFD700] text-[8px]">PLAYER</p>
+            {/* 8px → 15px */}
+            <p className="text-[#FFD700] text-[15px]">PLAYER</p>
             <p className="text-white text-[10px] mt-1">{profile.name}</p>
           </div>
           <div className="text-center" style={marioStyle}>
-            <p className="text-[#FFD700] text-[8px]">SCORE</p>
+            {/* 8px → 15px */}
+            <p className="text-[#FFD700] text-[15px]">SCORE</p>
             <p className="text-white text-[10px] mt-1">{String(profile.hpReduced).padStart(6, '0')}</p>
           </div>
           <div className="text-center" style={marioStyle}>
-            <p className="text-[#FFD700] text-[8px]">D-DAY</p>
+            {/* 8px → 15px */}
+            <p className="text-[#FFD700] text-[15px]">D-DAY</p>
             <p className="text-white text-[10px] mt-1">
               D-{Math.max(0, Math.ceil((new Date('2026-04-30').getTime() - new Date().getTime()) / 86400000))}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <div style={marioStyle}>
-              <p className="text-[#FFD700] text-[8px]">🔥 {myStreak}</p>
+              {/* 8px → 15px */}
+              <p className="text-[#FFD700] text-[15px]">🔥 {myStreak}</p>
             </div>
             <button onClick={() => auth.signOut()} className="p-1 bg-black/30 border-2 border-black">
               <LogOut className="w-4 h-4 text-white" />
@@ -1205,8 +1224,9 @@ export default function App() {
                     className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     style={marioStyle}
                   >
-                    <div className="text-[8px]">1주제 발표</div>
-                    <div className="text-[#FFD700] text-[8px] mt-1">-1 HP</div>
+                    {/* 8px → 15px */}
+                    <div className="text-[15px]">1주제 발표</div>
+                    <div className="text-[#FFD700] text-[15px] mt-1">-1 HP</div>
                   </button>
                   <button
                     onClick={() => reduceHP(1)}
@@ -1214,8 +1234,9 @@ export default function App() {
                     className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     style={marioStyle}
                   >
-                    <div className="text-[8px]">1주제 듣기</div>
-                    <div className="text-[#FFD700] text-[8px] mt-1">-1 HP</div>
+                    {/* 8px → 15px */}
+                    <div className="text-[15px]">1주제 듣기</div>
+                    <div className="text-[#FFD700] text-[15px] mt-1">-1 HP</div>
                   </button>
                   <button
                     onClick={() => reduceHP(2)}
@@ -1223,8 +1244,9 @@ export default function App() {
                     className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     style={marioStyle}
                   >
-                    <div className="text-[8px]">1주제 평가</div>
-                    <div className="text-[#FFD700] text-[8px] mt-1">-2 HP</div>
+                    {/* 8px → 15px */}
+                    <div className="text-[15px]">1주제 평가</div>
+                    <div className="text-[#FFD700] text-[15px] mt-1">-2 HP</div>
                   </button>
                   <button
                     onClick={() => handleMission()}
@@ -1232,18 +1254,21 @@ export default function App() {
                     className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     style={marioStyle}
                   >
-                    <div className="text-[8px]">온라인 선교</div>
-                    <div className="text-[#FFD700] text-[8px] mt-1">-0.5 HP</div>
+                    {/* 8px → 15px */}
+                    <div className="text-[15px]">온라인 선교</div>
+                    <div className="text-[#FFD700] text-[15px] mt-1">-0.5 HP</div>
                     {profile.lastMissionDate === new Date().toISOString().slice(0, 10) && (
-                      <div className="text-[#FF8888] text-[7px] mt-1">오늘 완료!</div>
+                      // 7px → 13px
+                      <div className="text-[#FF8888] text-[13px] mt-1">오늘 완료!</div>
                     )}
                   </button>
                 </div>
 
                 <div className="bg-[#000080] border-4 border-black p-3 shadow-[4px_4px_0px_black]">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[#FFD700] text-[8px]" style={marioStyle}>🔥 STREAK BONUS</span>
-                    <span className="text-white text-[8px]" style={marioStyle}>{myStreak} / 3 DAYS</span>
+                    {/* 8px → 15px */}
+                    <span className="text-[#FFD700] text-[15px]" style={marioStyle}>🔥 STREAK BONUS</span>
+                    <span className="text-white text-[15px]" style={marioStyle}>{myStreak} / 3 DAYS</span>
                   </div>
                   <div className="flex gap-2 mb-3">
                     {[1, 2, 3].map((i) => (
@@ -1255,7 +1280,8 @@ export default function App() {
                       <button
                         onClick={() => reduceHP(1, true)}
                         disabled={dragonHp <= 0 || attacking || ultimateActive}
-                        className="py-3 bg-[#E52521] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 text-[8px]"
+                        // 8px → 15px
+                        className="py-3 bg-[#E52521] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 text-[15px]"
                         style={marioStyle}
                       >
                         ⚡ 발표 x10<br />
@@ -1264,7 +1290,8 @@ export default function App() {
                       <button
                         onClick={() => reduceHP(2, true)}
                         disabled={dragonHp <= 0 || attacking || ultimateActive}
-                        className="py-3 bg-[#E52521] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 text-[8px]"
+                        // 8px → 15px
+                        className="py-3 bg-[#E52521] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 text-[15px]"
                         style={marioStyle}
                       >
                         ⚡ 평가 x10<br />
@@ -1347,7 +1374,8 @@ function RankingView() {
       </div>
       <div className="bg-[#000080] border-4 border-black shadow-[4px_4px_0px_black] overflow-hidden">
         {rankings.length === 0 && (
-          <p className="text-center text-white py-8 text-[8px]" style={marioStyle}>NO DATA YET...</p>
+          // 8px → 15px
+          <p className="text-center text-white py-8 text-[15px]" style={marioStyle}>NO DATA YET...</p>
         )}
         {rankings.map((r, i) => (
           <div key={r.id} className={`flex items-center justify-between p-3 border-b-2 border-black/30 ${i === 0 ? 'bg-[#FFD700]/20' : ''}`}>
@@ -1355,12 +1383,14 @@ function RankingView() {
               <span className="text-lg">{medals[i] ?? `${i + 1}.`}</span>
               <div>
                 <p className="text-white text-[10px]" style={marioStyle}>{r.name}</p>
-                <p className="text-[#888] text-[7px]" style={marioStyle}>{r.clubId || 'NO GUILD'}</p>
+                {/* 7px → 13px */}
+                <p className="text-[#888] text-[13px]" style={marioStyle}>{r.clubId || 'NO GUILD'}</p>
               </div>
             </div>
             <div className="text-right">
               <p className="text-[#FFD700] text-[10px]" style={marioStyle}>{String(r.hpReduced).padStart(6, '0')}</p>
-              <p className="text-[#888] text-[7px]" style={marioStyle}>SCORE</p>
+              {/* 7px → 13px */}
+              <p className="text-[#888] text-[13px]" style={marioStyle}>SCORE</p>
             </div>
           </div>
         ))}
@@ -1384,7 +1414,8 @@ function AdminView() {
           <button
             key={t.key}
             onClick={() => setSubTab(t.key)}
-            className={`flex-1 py-2 border-4 border-black text-[8px] shadow-[3px_3px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all ${subTab === t.key ? 'bg-[#FFD700] text-black' : 'bg-[#000080] text-white'}`}
+            // 8px → 15px
+            className={`flex-1 py-2 border-4 border-black text-[15px] shadow-[3px_3px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all ${subTab === t.key ? 'bg-[#FFD700] text-black' : 'bg-[#000080] text-white'}`}
             style={marioStyle}
           >
             {t.label}
@@ -1441,7 +1472,8 @@ function AdminUserManagement() {
   return (
     <div className="space-y-4">
       <button onClick={resetDragon}
-        className="w-full py-3 bg-[#E52521] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all text-[8px]"
+        // 8px → 15px
+        className="w-full py-3 bg-[#E52521] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all text-[15px]"
         style={marioStyle}
       >
         🐉 RESET BOSS HP ({DRAGON_MAX_HP})
@@ -1452,7 +1484,8 @@ function AdminUserManagement() {
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           placeholder="NEW PLAYER"
-          className="flex-1 px-3 py-2 bg-black text-white border-4 border-white text-[8px] focus:outline-none focus:border-[#FFD700]"
+          // 8px → 15px
+          className="flex-1 px-3 py-2 bg-black text-white border-4 border-white text-[15px] focus:outline-none focus:border-[#FFD700]"
           style={marioStyle}
         />
         <button onClick={addUser} className="p-2 bg-[#FFD700] text-black border-4 border-black shadow-[3px_3px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all">
@@ -1463,11 +1496,13 @@ function AdminUserManagement() {
         {users.map((u) => (
           <div key={u.id} className="bg-[#000080] border-4 border-black p-3 space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-white text-[9px]" style={marioStyle}>{u.name}</span>
+              {/* 9px → 16px */}
+              <span className="text-white text-[16px]" style={marioStyle}>{u.name}</span>
               <select
                 value={u.role}
                 onChange={(e) => updateRole(u.id, e.target.value as UserRole)}
-                className="bg-black text-white text-[8px] px-1 py-1 border-2 border-white"
+                // 8px → 15px
+                className="bg-black text-white text-[15px] px-1 py-1 border-2 border-white"
                 style={marioStyle}
               >
                 <option value="member">MEMBER</option>
@@ -1480,7 +1515,8 @@ function AdminUserManagement() {
               <select
                 value={u.clubId || ''}
                 onChange={(e) => assignClub(u.id, e.target.value)}
-                className="flex-1 bg-black text-white text-[8px] px-1 py-1 border-2 border-white"
+                // 8px → 15px
+                className="flex-1 bg-black text-white text-[15px] px-1 py-1 border-2 border-white"
                 style={marioStyle}
               >
                 <option value="">NO GUILD</option>
@@ -1490,7 +1526,8 @@ function AdminUserManagement() {
               </select>
               <button
                 onClick={() => deleteUser(u.id)}
-                className="px-2 py-1 bg-[#E52521] text-white border-2 border-black text-[8px] shadow-[2px_2px_0px_black] active:shadow-none"
+                // 8px → 15px
+                className="px-2 py-1 bg-[#E52521] text-white border-2 border-black text-[15px] shadow-[2px_2px_0px_black] active:shadow-none"
                 style={marioStyle}
               >
                 DEL
@@ -1527,7 +1564,8 @@ function AdminClubManagement() {
           value={newClubName}
           onChange={(e) => setNewClubName(e.target.value)}
           placeholder="NEW GUILD"
-          className="flex-1 px-3 py-2 bg-black text-white border-4 border-white text-[8px] focus:outline-none focus:border-[#FFD700]"
+          // 8px → 15px
+          className="flex-1 px-3 py-2 bg-black text-white border-4 border-white text-[15px] focus:outline-none focus:border-[#FFD700]"
           style={marioStyle}
         />
         <button onClick={addClub} className="p-2 bg-[#FFD700] text-black border-4 border-black shadow-[3px_3px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all">
@@ -1537,7 +1575,8 @@ function AdminClubManagement() {
       <div className="space-y-2">
         {clubs.map((c) => (
           <div key={c.id} className="bg-[#000080] border-4 border-black p-3 flex justify-between items-center">
-            <span className="text-white text-[9px]" style={marioStyle}>{c.name}</span>
+            {/* 9px → 16px */}
+            <span className="text-white text-[16px]" style={marioStyle}>{c.name}</span>
             <Users className="w-4 h-4 text-[#FFD700]" />
           </div>
         ))}
@@ -1560,17 +1599,19 @@ function AdminUserStatus() {
       <table className="w-full text-left">
         <thead className="bg-[#E52521]">
           <tr>
-            <th className="p-2 text-white text-[7px]" style={marioStyle}>NAME</th>
-            <th className="p-2 text-white text-[7px]" style={marioStyle}>SCORE</th>
-            <th className="p-2 text-white text-[7px]" style={marioStyle}>🔥</th>
+            {/* 7px → 13px */}
+            <th className="p-2 text-white text-[13px]" style={marioStyle}>NAME</th>
+            <th className="p-2 text-white text-[13px]" style={marioStyle}>SCORE</th>
+            <th className="p-2 text-white text-[13px]" style={marioStyle}>🔥</th>
           </tr>
         </thead>
         <tbody>
           {users.map((u) => (
             <tr key={u.id} className="border-t-2 border-black/30">
-              <td className="p-2 text-white text-[8px]" style={marioStyle}>{u.name}</td>
-              <td className="p-2 text-[#FFD700] text-[8px]" style={marioStyle}>{String(u.hpReduced).padStart(6, '0')}</td>
-              <td className="p-2 text-white text-[8px]" style={marioStyle}>{u.streak ?? 0}</td>
+              {/* 8px → 15px */}
+              <td className="p-2 text-white text-[15px]" style={marioStyle}>{u.name}</td>
+              <td className="p-2 text-[#FFD700] text-[15px]" style={marioStyle}>{String(u.hpReduced).padStart(6, '0')}</td>
+              <td className="p-2 text-white text-[15px]" style={marioStyle}>{u.streak ?? 0}</td>
             </tr>
           ))}
         </tbody>
@@ -1610,7 +1651,8 @@ function PresidentView({ clubId }: { clubId: string }) {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
       <div className="bg-[#E52521] border-4 border-black p-3 shadow-[4px_4px_0px_black] flex justify-between items-center">
         <h2 className="text-[#FFD700] text-[10px]" style={marioStyle}>👥 MY GUILD</h2>
-        <span className="text-white text-[8px]" style={marioStyle}>{clubId}</span>
+        {/* 8px → 15px */}
+        <span className="text-white text-[15px]" style={marioStyle}>{clubId}</span>
       </div>
       <div className="flex gap-2">
         <input
@@ -1618,7 +1660,8 @@ function PresidentView({ clubId }: { clubId: string }) {
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           placeholder="NEW MEMBER"
-          className="flex-1 px-3 py-2 bg-black text-white border-4 border-white text-[8px] focus:outline-none focus:border-[#FFD700]"
+          // 8px → 15px
+          className="flex-1 px-3 py-2 bg-black text-white border-4 border-white text-[15px] focus:outline-none focus:border-[#FFD700]"
           style={marioStyle}
         />
         <button onClick={addMember} className="p-2 bg-[#FFD700] text-black border-4 border-black shadow-[3px_3px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all">
@@ -1627,7 +1670,8 @@ function PresidentView({ clubId }: { clubId: string }) {
       </div>
       <div className="bg-[#000080] border-4 border-black shadow-[4px_4px_0px_black] overflow-hidden">
         {members.length === 0 && (
-          <p className="text-center text-white py-8 text-[8px]" style={marioStyle}>NO MEMBERS YET</p>
+          // 8px → 15px
+          <p className="text-center text-white py-8 text-[15px]" style={marioStyle}>NO MEMBERS YET</p>
         )}
         {members.map((m) => (
           <div key={m.id} className="flex items-center justify-between p-3 border-b-2 border-black/30">
@@ -1636,12 +1680,15 @@ function PresidentView({ clubId }: { clubId: string }) {
                 <span className="text-white text-xs font-bold">{m.name[0]}</span>
               </div>
               <div>
-                <p className="text-white text-[9px]" style={marioStyle}>{m.name}</p>
-                <p className="text-[#888] text-[7px]" style={marioStyle}>{m.role.toUpperCase()}</p>
+                {/* 9px → 16px */}
+                <p className="text-white text-[16px]" style={marioStyle}>{m.name}</p>
+                {/* 7px → 13px */}
+                <p className="text-[#888] text-[13px]" style={marioStyle}>{m.role.toUpperCase()}</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-[#FFD700] text-[9px]" style={marioStyle}>{String(m.hpReduced).padStart(6, '0')}</p>
+              {/* 9px → 16px */}
+              <p className="text-[#FFD700] text-[16px]" style={marioStyle}>{String(m.hpReduced).padStart(6, '0')}</p>
             </div>
           </div>
         ))}
