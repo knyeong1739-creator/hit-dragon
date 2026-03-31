@@ -29,8 +29,6 @@ import { db, auth } from './firebase';
 import { UserProfile, UserRole, Club } from './types';
 import {
   Users,
-  Trophy,
-  Settings,
   LogOut,
   Plus,
   UserPlus,
@@ -49,17 +47,18 @@ const ADMIN_PW = '1925';
 const DRAGON_MAX_HP = 5000;
 const APP_DOMAIN = '@yongdu.app';
 const APP_PASSWORD = 'yongdu2024';
+const COMBO_MAX = 10;
 
 const FEMALE_IMG = 'https://i.imgur.com/6T13I4G.png';
 const MALE_IMG = 'https://i.imgur.com/J8xZmMB.png';
 
 // ─── 용 이미지 (HP 구간별) ────────────────────────────────────
 const DRAGON_IMG = 'https://i.imgur.com/fIBT70D.png';
-const DRAGON_IMG_HEALTHY  = 'https://i.imgur.com/7BiEgJ2.png'; // 80%↑ & 60~80%
-const DRAGON_IMG_WOUNDED  = 'https://i.imgur.com/Szhp83Z.png'; // 40~60%
-const DRAGON_IMG_CRITICAL = 'https://i.imgur.com/BsixFPX.png'; // 20~40%
-const DRAGON_IMG_DYING    = 'https://i.imgur.com/CkyY4nf.png'; // 20%↓
-const DRAGON_IMG_DEAD     = 'https://i.imgur.com/O821V8v.png'; // 처치
+const DRAGON_IMG_HEALTHY  = 'https://i.imgur.com/7BiEgJ2.png';
+const DRAGON_IMG_WOUNDED  = 'https://i.imgur.com/Szhp83Z.png';
+const DRAGON_IMG_CRITICAL = 'https://i.imgur.com/BsixFPX.png';
+const DRAGON_IMG_DYING    = 'https://i.imgur.com/CkyY4nf.png';
+const DRAGON_IMG_DEAD     = 'https://i.imgur.com/O821V8v.png';
 
 // ─── 마리오 스타일 ────────────────────────────────────────────
 const marioStyle = {
@@ -121,31 +120,15 @@ function Cloud({ x, y, scale = 1 }: { x: number; y: number; scale?: number }) {
   );
 }
 
-// ─── 블록 컴포넌트 ────────────────────────────────────────────
-function MarioBlock({ children, color = '#C84B11' }: { children?: React.ReactNode; color?: string }) {
-  return (
-    <div
-      className="w-10 h-10 flex items-center justify-center text-white font-bold text-lg border-4 border-black"
-      style={{
-        background: color,
-        boxShadow: 'inset -4px -4px 0px rgba(0,0,0,0.3), inset 4px 4px 0px rgba(255,255,255,0.3)',
-        imageRendering: 'pixelated',
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
 // ─── HP 페이즈 헬퍼 ──────────────────────────────────────────
 function getDragonPhase(hp: number, maxHp: number) {
   const ratio = hp / maxHp;
   if (hp <= 0)      return 'dead';
-  if (ratio > 0.80) return 'healthy';  // 80%↑
-  if (ratio > 0.60) return 'hurt';     // 60~80%
-  if (ratio > 0.40) return 'wounded';  // 40~60%
-  if (ratio > 0.20) return 'critical'; // 20~40%
-  return 'dying';                       // 20%↓
+  if (ratio > 0.80) return 'healthy';
+  if (ratio > 0.60) return 'hurt';
+  if (ratio > 0.40) return 'wounded';
+  if (ratio > 0.20) return 'critical';
+  return 'dying';
 }
 
 function getDragonImage(phase: string): string {
@@ -154,7 +137,7 @@ function getDragonImage(phase: string): string {
     case 'critical': return DRAGON_IMG_CRITICAL;
     case 'dying':    return DRAGON_IMG_DYING;
     case 'dead':     return DRAGON_IMG_DEAD;
-    default:         return DRAGON_IMG_HEALTHY; // healthy + hurt 공통
+    default:         return DRAGON_IMG_HEALTHY;
   }
 }
 
@@ -199,14 +182,276 @@ function getHpBarColor(phase: string): string {
   }
 }
 
+// ─── 필살기 씬 ────────────────────────────────────────────────
+function UltimateSkillScene({ onComplete }: { onComplete: () => void }) {
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setPhase(1), 700),
+      setTimeout(() => setPhase(2), 1300),
+      setTimeout(() => setPhase(3), 2900),
+      setTimeout(() => setPhase(4), 3700),
+      setTimeout(() => onComplete(), 5200),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [onComplete]);
+
+  return (
+    <div
+      className="absolute inset-0 z-50 overflow-hidden"
+      style={{ background: 'radial-gradient(ellipse at center, #1a0033 0%, #000 100%)' }}
+    >
+      {/* 별빛 배경 */}
+      {Array.from({ length: 30 }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full bg-white"
+          style={{
+            width: Math.random() * 3 + 1,
+            height: Math.random() * 3 + 1,
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 60}%`,
+          }}
+          animate={{ opacity: [0.2, 1, 0.2] }}
+          transition={{ duration: Math.random() * 2 + 1, repeat: Infinity, delay: Math.random() * 2 }}
+        />
+      ))}
+
+      {/* ULTIMATE 텍스트 */}
+      <motion.div
+        className="absolute top-4 left-0 right-0 flex justify-center z-30"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <motion.p
+          className="text-[#FFD700] text-xs"
+          style={marioStyle}
+          animate={{ opacity: [1, 0.3, 1], scale: [1, 1.05, 1] }}
+          transition={{ duration: 0.5, repeat: Infinity }}
+        >
+          ⚡ ULTIMATE SKILL ⚡
+        </motion.p>
+      </motion.div>
+
+      {/* 용 (중앙 하단 고정) */}
+      <motion.div
+        className="absolute z-10"
+        style={{ left: '50%', bottom: '8%', transform: 'translateX(-50%)' }}
+        animate={phase >= 3 ? { y: [0, 12, -6, 0], filter: ['brightness(1)', 'brightness(4)', 'brightness(1)'] } : {}}
+        transition={{ duration: 0.5 }}
+      >
+        <img
+          src={phase >= 3 ? DRAGON_IMG_CRITICAL : DRAGON_IMG_HEALTHY}
+          className="w-28 h-28 object-contain"
+          style={{ imageRendering: 'pixelated' }}
+        />
+        {phase >= 3 && (
+          <>
+            <motion.div
+              className="absolute rounded-full border-4 border-yellow-400"
+              style={{ left: '-60px', top: '-60px' }}
+              initial={{ opacity: 1, width: '0px', height: '0px' }}
+              animate={{ opacity: [1, 0], width: '240px', height: '240px' }}
+              transition={{ duration: 0.7 }}
+            />
+            <motion.div
+              className="absolute rounded-full border-4 border-orange-400"
+              style={{ left: '-40px', top: '-40px' }}
+              initial={{ opacity: 1, width: '0px', height: '0px' }}
+              animate={{ opacity: [1, 0], width: '180px', height: '180px' }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            />
+          </>
+        )}
+      </motion.div>
+
+      {/* ── 여캐: 오른쪽에서 달려와서 도약 → 공중제비 → 내려찍기 ── */}
+      <motion.div
+        className="absolute z-20"
+        style={{ bottom: '12%' }}
+        animate={
+          phase === 0
+            ? { left: ['92%', '60%'], y: [0, -8, 0, -6, 0, -4, 0] }
+            : phase === 1
+              ? { left: '60%', y: [0, -130] }
+              : phase === 2
+                ? { left: '60%', y: -130, rotate: [0, -360, -720, -1080] }
+                : phase === 3
+                  ? { left: '60%', y: [-130, 10, 0] }
+                  : { left: '60%', y: 0 }
+        }
+        transition={
+          phase === 0
+            ? { duration: 0.7, ease: 'easeOut' }
+            : phase === 1
+              ? { duration: 0.55, ease: 'easeOut' }
+              : phase === 2
+                ? { duration: 1.5, ease: 'linear' }
+                : phase === 3
+                  ? { duration: 0.7, ease: 'easeIn' }
+                  : { duration: 0.3 }
+        }
+      >
+        {phase === 2 && (
+          <motion.div
+            className="absolute inset-0 opacity-30"
+            animate={{ rotate: [0, -360, -720, -1080] }}
+            transition={{ duration: 1.5, ease: 'linear' }}
+          >
+            <img src={FEMALE_IMG} className="w-16 h-16 object-contain opacity-40" style={{ imageRendering: 'pixelated', filter: 'hue-rotate(90deg)' }} />
+          </motion.div>
+        )}
+        <img
+          src={FEMALE_IMG}
+          className="w-16 h-16 object-contain"
+          style={{ imageRendering: 'pixelated', transform: 'scaleX(-1)' }}
+        />
+      </motion.div>
+
+      {/* ── 남캐: 왼쪽에서 달려와서 도약 → 공중제비 → 내려찍기 ── */}
+      <motion.div
+        className="absolute z-20"
+        style={{ bottom: '12%' }}
+        animate={
+          phase === 0
+            ? { left: ['2%', '30%'], y: [0, -8, 0, -6, 0, -4, 0] }
+            : phase === 1
+              ? { left: '33%', y: [0, -130] }
+              : phase === 2
+                ? { left: '33%', y: -130, rotate: [0, 360, 720, 1080] }
+                : phase === 3
+                  ? { left: '33%', y: [-130, 10, 0] }
+                  : { left: '33%', y: 0 }
+        }
+        transition={
+          phase === 0
+            ? { duration: 0.7, ease: 'easeOut' }
+            : phase === 1
+              ? { duration: 0.55, ease: 'easeOut', delay: 0.08 }
+              : phase === 2
+                ? { duration: 1.5, ease: 'linear' }
+                : phase === 3
+                  ? { duration: 0.72, ease: 'easeIn', delay: 0.04 }
+                  : { duration: 0.3 }
+        }
+      >
+        {phase === 2 && (
+          <motion.div
+            className="absolute inset-0 opacity-30"
+            animate={{ rotate: [0, 360, 720, 1080] }}
+            transition={{ duration: 1.5, ease: 'linear' }}
+          >
+            <img src={MALE_IMG} className="w-16 h-16 object-contain opacity-40" style={{ imageRendering: 'pixelated', filter: 'hue-rotate(180deg)' }} />
+          </motion.div>
+        )}
+        <img
+          src={MALE_IMG}
+          className="w-16 h-16 object-contain"
+          style={{ imageRendering: 'pixelated', transform: 'scaleX(-1)' }}
+        />
+      </motion.div>
+
+      {/* 여캐 강하 빔 (phase 3) — 오른쪽 */}
+      {phase >= 3 && (
+        <motion.div
+          className="absolute z-25"
+          style={{ left: '63%', top: 0 }}
+          initial={{ height: 0, opacity: 1 }}
+          animate={{ height: '82%', opacity: [1, 0.7, 0] }}
+          transition={{ duration: 0.55 }}
+        >
+          <div style={{ width: '8px', height: '100%', background: 'linear-gradient(to bottom, transparent, #FF88FF, #FFFFFF)' }} />
+        </motion.div>
+      )}
+
+      {/* 남캐 강하 빔 (phase 3) — 왼쪽 */}
+      {phase >= 3 && (
+        <motion.div
+          className="absolute z-25"
+          style={{ left: '36%', top: 0 }}
+          initial={{ height: 0, opacity: 1 }}
+          animate={{ height: '82%', opacity: [1, 0.7, 0] }}
+          transition={{ duration: 0.55, delay: 0.04 }}
+        >
+          <div style={{ width: '8px', height: '100%', background: 'linear-gradient(to bottom, transparent, #88FFFF, #FFFFFF)' }} />
+        </motion.div>
+      )}
+
+      {/* 피니시 텍스트 */}
+      {phase >= 4 && (
+        <motion.div
+          className="absolute inset-0 flex flex-col items-center justify-center z-40"
+          initial={{ opacity: 0, scale: 0.3 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', bounce: 0.5 }}
+        >
+          <p className="text-[#FFD700] text-sm mb-2" style={marioStyle}>
+            💥 COMBO FINISH! 💥
+          </p>
+          <p className="text-white text-[8px]" style={marioStyle}>
+            -20 HP DEALT!
+          </p>
+        </motion.div>
+      )}
+
+      {/* 화면 전체 번쩍임 (phase 3) */}
+      <AnimatePresence>
+        {phase === 3 && (
+          <motion.div
+            className="absolute inset-0 z-30 pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.9, 0, 0.5, 0] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{ backgroundColor: '#FFFFAA' }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* 파티클 (phase 4) */}
+      {phase >= 4 && Array.from({ length: 12 }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute z-35 text-lg"
+          style={{
+            left: `${30 + Math.random() * 40}%`,
+            top: `${30 + Math.random() * 30}%`,
+          }}
+          initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
+          animate={{
+            opacity: [1, 0],
+            scale: [0, 1.5],
+            x: (Math.random() - 0.5) * 80,
+            y: (Math.random() - 0.5) * 80,
+          }}
+          transition={{ duration: 0.8, delay: Math.random() * 0.3 }}
+        >
+          {['⭐', '✨', '💥', '🌟'][Math.floor(Math.random() * 4)]}
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 // ─── 전투 씬 ─────────────────────────────────────────────────
-function BattleScene({ dragonHp, attacking, superAttacking }: {
-  dragonHp: number; attacking: boolean; superAttacking: boolean;
+function BattleScene({
+  dragonHp,
+  attacking,
+  superAttacking,
+  ultimateActive,
+  onUltimateComplete,
+}: {
+  dragonHp: number;
+  attacking: boolean;
+  superAttacking: boolean;
+  ultimateActive: boolean;
+  onUltimateComplete: () => void;
 }) {
   const phase = getDragonPhase(dragonHp, DRAGON_MAX_HP);
   const phaseLabel = getPhaseLabel(phase);
 
-  // 페이즈별 용 idle 흔들림
   const dragonIdleAnimate = attacking
     ? { x: [0, -6, 6, -4, 4, 0] }
     : phase === 'dying'
@@ -215,7 +460,7 @@ function BattleScene({ dragonHp, attacking, superAttacking }: {
         ? { x: [0, -3, 3, -2, 2, 0] }
         : phase === 'wounded'
           ? { x: [0, -1, 1, 0] }
-          : { x:0 };
+          : { x: 0 };
 
   const dragonIdleTransition = attacking
     ? { duration: 0.4 }
@@ -232,7 +477,12 @@ function BattleScene({ dragonHp, attacking, superAttacking }: {
       className="relative w-full aspect-video overflow-hidden border-4 border-black"
       style={{ background: getSkyGradient(phase), transition: 'background 2s ease' }}
     >
-      {/* 빈사/위기 상태 화면 가장자리 붉은 맥박 */}
+      <AnimatePresence>
+        {ultimateActive && (
+          <UltimateSkillScene onComplete={onUltimateComplete} />
+        )}
+      </AnimatePresence>
+
       {(phase === 'dying' || phase === 'critical') && (
         <motion.div
           className="absolute inset-0 pointer-events-none z-[5]"
@@ -242,12 +492,10 @@ function BattleScene({ dragonHp, attacking, superAttacking }: {
         />
       )}
 
-      {/* 구름들 */}
       <Cloud x={5} y={5} scale={1.2} />
       <Cloud x={55} y={10} />
       <Cloud x={80} y={3} scale={0.8} />
 
-      {/* 땅 블록들 */}
       <div className="absolute bottom-0 left-0 right-0 flex pointer-events-none z-0">
         {Array.from({ length: 20 }).map((_, i) => (
           <div key={i} className="flex-1 h-8 border-2 border-black"
@@ -260,74 +508,74 @@ function BattleScene({ dragonHp, attacking, superAttacking }: {
         ))}
       </div>
 
-      {/* 여자 캐릭터 (왼쪽) */}
-      <motion.div
-        className="absolute z-20"
-        style={{ left: '10%', bottom: '32px' }}
-        animate={attacking
-          ? { x: [0, 55, 55, 0], y: [0, -15, 0, 0] }
-          : { x: 0, y: [0, -3, 0] }
-        }
-        transition={attacking
-          ? { duration: 0.5, ease: 'easeInOut' }
-          : { duration: 1, repeat: Infinity, ease: 'easeInOut' }
-        }
-      >
-        <img src={FEMALE_IMG} className="w-20 h-20 object-contain" style={{ imageRendering: 'pixelated' }} />
-      </motion.div>
+      {!ultimateActive && (
+        <motion.div
+          className="absolute z-20"
+          style={{ left: '10%', bottom: '32px' }}
+          animate={attacking
+            ? { x: [0, 55, 55, 0], y: [0, -15, 0, 0] }
+            : { x: 0, y: [0, -3, 0] }
+          }
+          transition={attacking
+            ? { duration: 0.5, ease: 'easeInOut' }
+            : { duration: 1, repeat: Infinity, ease: 'easeInOut' }
+          }
+        >
+          <img src={FEMALE_IMG} className="w-20 h-20 object-contain" style={{ imageRendering: 'pixelated' }} />
+        </motion.div>
+      )}
 
-      {/* 용 (가운데) — 페이즈별 CSS 필터 + 흔들림 */}
-      <motion.div
-        className="absolute z-10"
-        style={{ left: '41%', bottom: '0px', marginLeft: '-56px' }}
-        animate={dragonIdleAnimate}
-        transition={dragonIdleTransition}
-      >
-        <img
-          src={getDragonImage(phase)}
-          className="w-40 h-40 object-contain"
-          style={{
-            imageRendering: 'pixelated',
-            opacity: phase === 'dead' ? 0.85 : 1,
-            transition: 'opacity 0.5s ease',
-          }}
-        />
+      {!ultimateActive && (
+        <motion.div
+          className="absolute z-10"
+          style={{ left: '50%', bottom: '0px', marginLeft: '-80px' }}
+          animate={dragonIdleAnimate}
+          transition={dragonIdleTransition}
+        >
+          <img
+            src={getDragonImage(phase)}
+            className="w-40 h-40 object-contain"
+            style={{
+              imageRendering: 'pixelated',
+              opacity: phase === 'dead' ? 0.85 : 1,
+              transition: 'opacity 0.5s ease',
+            }}
+          />
+          {phase === 'dying' && (
+            <div className="absolute inset-0 pointer-events-none">
+              {(['-8px', '28px', '52px', '12px'] as string[]).map((left, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute bottom-2 text-base"
+                  style={{ left }}
+                  animate={{ y: [0, -28, -56], opacity: [1, 0.6, 0], scale: [0.8, 1.2, 0.3] }}
+                  transition={{ duration: 0.8 + i * 0.2, repeat: Infinity, delay: i * 0.25, ease: 'easeOut' }}
+                >
+                  {i % 2 === 0 ? '🔥' : '💢'}
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
 
-        {/* 빈사 상태 불꽃 파티클 */}
-        {phase === 'dying' && (
-          <div className="absolute inset-0 pointer-events-none">
-            {(['-8px', '28px', '52px', '12px'] as string[]).map((left, i) => (
-              <motion.div
-                key={i}
-                className="absolute bottom-2 text-base"
-                style={{ left }}
-                animate={{ y: [0, -28, -56], opacity: [1, 0.6, 0], scale: [0.8, 1.2, 0.3] }}
-                transition={{ duration: 0.8 + i * 0.2, repeat: Infinity, delay: i * 0.25, ease: 'easeOut' }}
-              >
-                {i % 2 === 0 ? '🔥' : '💢'}
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </motion.div>
+      {!ultimateActive && (
+        <motion.div
+          className="absolute z-20"
+          style={{ right: '12%', bottom: '32px' }}
+          animate={attacking
+            ? { x: [0, -55, -55, 0], y: [0, -15, 0, 0] }
+            : { x: 0, y: [0, -3, 0] }
+          }
+          transition={attacking
+            ? { duration: 0.5, ease: 'easeInOut' }
+            : { duration: 1, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }
+          }
+        >
+          <img src={MALE_IMG} className="w-20 h-20 object-contain" style={{ imageRendering: 'pixelated' }} />
+        </motion.div>
+      )}
 
-      {/* 남자 캐릭터 (오른쪽) */}
-      <motion.div
-        className="absolute z-20"
-        style={{ right: '12%', bottom: '32px' }}
-        animate={attacking
-          ? { x: [0, -55, -55, 0], y: [0, -15, 0, 0] }
-          : { x: 0, y: [0, -3, 0] }
-        }
-        transition={attacking
-          ? { duration: 0.5, ease: 'easeInOut' }
-          : { duration: 1, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }
-        }
-      >
-        <img src={MALE_IMG} className="w-20 h-20 object-contain" style={{ imageRendering: 'pixelated', transform: 'scaleX(1)' }} />
-      </motion.div>
-
-      {/* 일반 공격 이펙트 */}
       <AnimatePresence>
         {attacking && !superAttacking && (
           <motion.div
@@ -342,11 +590,9 @@ function BattleScene({ dragonHp, attacking, superAttacking }: {
         )}
       </AnimatePresence>
 
-      {/* 번개 이펙트 (10배 공격) */}
       <AnimatePresence>
         {superAttacking && (
           <>
-            {/* 화면 번쩍임 */}
             <motion.div
               className="absolute inset-0 z-40 pointer-events-none"
               initial={{ opacity: 0 }}
@@ -355,7 +601,6 @@ function BattleScene({ dragonHp, attacking, superAttacking }: {
               transition={{ duration: 1 }}
               style={{ backgroundColor: '#FFFF00' }}
             />
-            {/* 번개 여러 개 */}
             {[35, 50, 65].map((left, i) => (
               <motion.div
                 key={i}
@@ -375,20 +620,14 @@ function BattleScene({ dragonHp, attacking, superAttacking }: {
                 }} />
               </motion.div>
             ))}
-            {/* 충격파 */}
             <motion.div
               className="absolute z-40 pointer-events-none rounded-full border-4 border-yellow-400"
-              style={{
-                left: '50%', top: '45%',
-                transform: 'translate(-50%, -50%)',
-                background: 'radial-gradient(circle, #FFD70044, transparent)',
-              }}
+              style={{ left: '50%', top: '45%', transform: 'translate(-50%, -50%)', background: 'radial-gradient(circle, #FFD70044, transparent)' }}
               initial={{ opacity: 1, width: 0, height: 0 }}
               animate={{ opacity: [1, 0], width: ['0px', '250px'], height: ['0px', '250px'] }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}
             />
-            {/* ⚡ 이펙트 */}
             <motion.div
               className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none"
               initial={{ opacity: 0, scale: 0.3 }}
@@ -402,19 +641,6 @@ function BattleScene({ dragonHp, attacking, superAttacking }: {
         )}
       </AnimatePresence>
 
-      {/* HP 바 */}
-      <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-        {dragonHp <= 0 && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center text-[#FFD700] text-xs"
-            style={marioStyle}
-          >
-            BOSS CLEAR! 🐉
-          </motion.p>
-        )}
-      </div>
       <div className="absolute top-3 left-3 right-3 z-20">
         {dragonHp > 0 && (
           <div className="bg-black/60 p-2 border-2 border-black">
@@ -449,7 +675,139 @@ function BattleScene({ dragonHp, attacking, superAttacking }: {
             </div>
           </div>
         )}
+        {dragonHp <= 0 && (
+          <div className="flex justify-center mt-4">
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center text-[#FFD700] text-xs"
+              style={marioStyle}
+            >
+              BOSS CLEAR! 🐉
+            </motion.p>
+          </div>
+        )}
       </div>
+    </div>
+  );
+}
+
+// ─── 콤보 게이지 컴포넌트 ────────────────────────────────────
+function ComboGauge({
+  combo,
+  maxCombo,
+  onUltimate,
+  disabled,
+}: {
+  combo: number;
+  maxCombo: number;
+  onUltimate: () => void;
+  disabled: boolean;
+}) {
+  const isFull = combo >= maxCombo;
+  const pct = Math.min((combo / maxCombo) * 100, 100);
+
+  return (
+    <div
+      className="border-4 border-black p-3 shadow-[4px_4px_0px_black]"
+      style={{
+        background: isFull
+          ? 'linear-gradient(135deg, #4B0082, #800080, #4B0082)'
+          : '#000080',
+      }}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <motion.span
+          className="text-[8px]"
+          style={{ ...marioStyle, color: isFull ? '#FFD700' : '#AA88FF' }}
+          animate={isFull ? { opacity: [1, 0.3, 1] } : { opacity: 1 }}
+          transition={isFull ? { duration: 0.6, repeat: Infinity } : {}}
+        >
+          ⚔️ COMBO GAUGE
+        </motion.span>
+        <span className="text-[8px]" style={{ ...marioStyle, color: isFull ? '#FFD700' : '#FFFFFF' }}>
+          {combo} / {maxCombo}
+        </span>
+      </div>
+
+      <div className="h-5 bg-black border-2 border-black overflow-hidden mb-3 relative">
+        <motion.div
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          className="h-full relative"
+          style={{
+            background: isFull
+              ? 'linear-gradient(90deg, #9400D3, #FF00FF, #FFD700)'
+              : 'linear-gradient(90deg, #6600CC, #9900FF)',
+          }}
+        />
+        {Array.from({ length: maxCombo - 1 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute top-0 bottom-0 w-[2px] bg-black/40"
+            style={{ left: `${((i + 1) / maxCombo) * 100}%` }}
+          />
+        ))}
+        {isFull && (
+          <motion.div
+            className="absolute inset-0"
+            animate={{ x: ['-100%', '100%'] }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            style={{
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+              width: '50%',
+            }}
+          />
+        )}
+      </div>
+
+      <div className="flex gap-1 mb-3 justify-center">
+        {Array.from({ length: maxCombo }).map((_, i) => (
+          <motion.div
+            key={i}
+            className="w-4 h-4 border-2 border-black"
+            animate={
+              i < combo
+                ? { scale: [1, 1.2, 1], backgroundColor: ['#9900FF', '#FFD700', '#9900FF'] }
+                : {}
+            }
+            transition={i < combo ? { duration: 1, repeat: Infinity, delay: i * 0.05 } : {}}
+            style={{
+              backgroundColor: i < combo ? '#9900FF' : '#111',
+              boxShadow: i < combo ? '0 0 6px #9900FF' : 'none',
+            }}
+          />
+        ))}
+      </div>
+
+      <AnimatePresence>
+        {isFull && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={onUltimate}
+            disabled={disabled}
+            className="w-full py-3 border-4 border-black text-black text-[9px] disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{
+              ...marioStyle,
+              background: 'linear-gradient(135deg, #FFD700, #FF8C00, #FFD700)',
+              boxShadow: disabled ? 'none' : '4px 4px 0px black',
+            }}
+            whileTap={{ scale: 0.97, x: 2, y: 2 }}
+          >
+            🌀 합체 필살기 발동! 🌀
+            <br />
+            <span style={{ color: '#4B0082', fontSize: '7px' }}>-20 HP COMBO FINISH</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {!isFull && (
+        <p className="text-center text-[7px] text-[#AA88FF]" style={marioStyle}>
+          공격 {maxCombo - combo}회 더 하면 필살기 해금!
+        </p>
+      )}
     </div>
   );
 }
@@ -463,6 +821,8 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'main' | 'ranking' | 'admin' | 'club'>('main');
   const [attacking, setAttacking] = useState(false);
   const [superAttacking, setSuperAttacking] = useState(false);
+  const [combo, setCombo] = useState(0);
+  const [ultimateActive, setUltimateActive] = useState(false);
 
   const [loginName, setLoginName] = useState('');
   const [adminId, setAdminId] = useState('');
@@ -475,7 +835,7 @@ export default function App() {
     audio.loop = true;
     audio.volume = 0.3;
     const start = () => {
-      audio.play();
+      audio.play().catch(() => {});
       document.removeEventListener('click', start);
     };
     document.addEventListener('click', start);
@@ -592,13 +952,13 @@ export default function App() {
   };
 
   const playSound = (url: string) => {
-      const audio = new Audio(url);
-      audio.volume = 0.5;
-      audio.play().catch(() => {});
-    };
+    const audio = new Audio(url);
+    audio.volume = 0.5;
+    audio.play().catch(() => {});
+  };
 
   const reduceHP = async (amount: number, triple = false) => {
-    if (!profile || !user || dragonHp <= 0 || attacking) return;
+    if (!profile || !user || dragonHp <= 0 || attacking || ultimateActive) return;
     const today = new Date().toISOString().slice(0, 10);
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     const lastAttack = profile.lastAttackDate ?? '';
@@ -617,6 +977,7 @@ export default function App() {
       playSound('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/dragon-studio-sword-slice-2-393845.mp3');
     }
     setTimeout(() => setAttacking(false), 600);
+    setCombo((prev) => Math.min(prev + 1, COMBO_MAX));
     try {
       await updateDoc(doc(db, 'dragon', 'state'), { hp: increment(-finalAmount) });
       await updateDoc(doc(db, 'users', user.uid), {
@@ -626,6 +987,24 @@ export default function App() {
       });
     } catch (err) {
       alert('데미지 적용 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleUltimate = async () => {
+    if (!profile || !user || dragonHp <= 0 || combo < COMBO_MAX || ultimateActive) return;
+    setUltimateActive(true);
+    playSound('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/u_vrs223ln83-loud-thunder-439064.mp3');
+  };
+
+  const handleUltimateComplete = async () => {
+    setUltimateActive(false);
+    setCombo(0);
+    if (!profile || !user) return;
+    try {
+      await updateDoc(doc(db, 'dragon', 'state'), { hp: increment(-20) });
+      await updateDoc(doc(db, 'users', user.uid), { hpReduced: increment(20) });
+    } catch (err) {
+      console.error('필살기 데미지 적용 오류', err);
     }
   };
 
@@ -644,19 +1023,16 @@ export default function App() {
       <div className="min-h-screen flex flex-col items-center justify-center p-6"
         style={{ background: 'linear-gradient(to bottom, #5C94FC 60%, #5C7A3C 60%)' }}
       >
-        {/* 구름 배경 */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
           <Cloud x={5} y={5} scale={1.2} />
           <Cloud x={55} y={10} />
           <Cloud x={75} y={3} scale={0.8} />
         </div>
-
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-md relative z-10"
         >
-          {/* 타이틀 블록 */}
           <div className="bg-[#E52521] border-4 border-black p-6 shadow-[6px_6px_0px_black] mb-6">
             <div className="flex justify-center mb-4">
               <img src={DRAGON_IMG} className="w-16 h-16 object-contain" style={{ imageRendering: 'pixelated' }} />
@@ -664,8 +1040,6 @@ export default function App() {
             <h1 className="text-white text-center text-lg mb-1" style={marioStyle}>용두백타</h1>
             <p className="text-[#FFD700] text-center text-[8px] mt-2" style={marioStyle}>INSERT COIN</p>
           </div>
-
-          {/* 로그인 폼 */}
           <div className="bg-[#000080] border-4 border-black p-6 shadow-[6px_6px_0px_black]">
             {!showAdminLogin ? (
               <form onSubmit={handleLogin} className="space-y-4">
@@ -753,14 +1127,12 @@ export default function App() {
       <div className="min-h-screen text-white pb-24"
         style={{ background: 'linear-gradient(to bottom, #5C94FC 0%, #5C94FC 80%, #5C7A3C 80%)' }}
       >
-        {/* 구름 배경 */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
           <Cloud x={5} y={8} scale={1.2} />
           <Cloud x={55} y={12} />
           <Cloud x={78} y={5} scale={0.8} />
         </div>
 
-        {/* Header */}
         <header className="relative z-10 px-4 py-3 flex justify-between items-center bg-[#E52521] border-b-4 border-black">
           <div style={marioStyle}>
             <p className="text-[#FFD700] text-[8px]">PLAYER</p>
@@ -780,9 +1152,7 @@ export default function App() {
             <div style={marioStyle}>
               <p className="text-[#FFD700] text-[8px]">🔥 {myStreak}</p>
             </div>
-            <button onClick={() => auth.signOut()}
-              className="p-1 bg-black/30 border-2 border-black"
-            >
+            <button onClick={() => auth.signOut()} className="p-1 bg-black/30 border-2 border-black">
               <LogOut className="w-4 h-4 text-white" />
             </button>
           </div>
@@ -792,15 +1162,17 @@ export default function App() {
           <AnimatePresence mode="wait">
             {activeTab === 'main' && (
               <motion.div key="main" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-
-                {/* 전투 씬 */}
-                <BattleScene dragonHp={dragonHp} attacking={attacking} superAttacking={superAttacking} />
-
-                {/* 일반 공격 버튼 */}
+                <BattleScene
+                  dragonHp={dragonHp}
+                  attacking={attacking}
+                  superAttacking={superAttacking}
+                  ultimateActive={ultimateActive}
+                  onUltimateComplete={handleUltimateComplete}
+                />
                 <div className="grid grid-cols-3 gap-3">
                   <button
                     onClick={() => reduceHP(1)}
-                    disabled={dragonHp <= 0 || attacking}
+                    disabled={dragonHp <= 0 || attacking || ultimateActive}
                     className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     style={marioStyle}
                   >
@@ -809,7 +1181,7 @@ export default function App() {
                   </button>
                   <button
                     onClick={() => reduceHP(1)}
-                    disabled={dragonHp <= 0 || attacking}
+                    disabled={dragonHp <= 0 || attacking || ultimateActive}
                     className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     style={marioStyle}
                   >
@@ -818,7 +1190,7 @@ export default function App() {
                   </button>
                   <button
                     onClick={() => reduceHP(2)}
-                    disabled={dragonHp <= 0 || attacking}
+                    disabled={dragonHp <= 0 || attacking || ultimateActive}
                     className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     style={marioStyle}
                   >
@@ -827,13 +1199,11 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* 스트릭 / 10배 버튼 */}
                 <div className="bg-[#000080] border-4 border-black p-3 shadow-[4px_4px_0px_black]">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[#FFD700] text-[8px]" style={marioStyle}>🔥 STREAK BONUS</span>
                     <span className="text-white text-[8px]" style={marioStyle}>{myStreak} / 3 DAYS</span>
                   </div>
-                  {/* 스트릭 바 */}
                   <div className="flex gap-2 mb-3">
                     {[1, 2, 3].map((i) => (
                       <div key={i} className={`flex-1 h-4 border-2 border-black ${myStreak >= i ? 'bg-[#FFD700]' : 'bg-black/40'}`} />
@@ -843,7 +1213,7 @@ export default function App() {
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         onClick={() => reduceHP(1, true)}
-                        disabled={dragonHp <= 0 || attacking}
+                        disabled={dragonHp <= 0 || attacking || ultimateActive}
                         className="py-3 bg-[#E52521] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 text-[8px]"
                         style={marioStyle}
                       >
@@ -852,7 +1222,7 @@ export default function App() {
                       </button>
                       <button
                         onClick={() => reduceHP(2, true)}
-                        disabled={dragonHp <= 0 || attacking}
+                        disabled={dragonHp <= 0 || attacking || ultimateActive}
                         className="py-3 bg-[#E52521] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 text-[8px]"
                         style={marioStyle}
                       >
@@ -863,6 +1233,12 @@ export default function App() {
                   )}
                 </div>
 
+                <ComboGauge
+                  combo={combo}
+                  maxCombo={COMBO_MAX}
+                  onUltimate={handleUltimate}
+                  disabled={dragonHp <= 0 || ultimateActive}
+                />
               </motion.div>
             )}
 
@@ -874,7 +1250,6 @@ export default function App() {
           </AnimatePresence>
         </main>
 
-        {/* Bottom Navigation */}
         <nav className="fixed bottom-0 left-0 right-0 bg-[#E52521] border-t-4 border-black px-4 py-3 z-50">
           <div className="max-w-2xl mx-auto flex justify-around items-center">
             <NavButton active={activeTab === 'main'} onClick={() => setActiveTab('main')} label="🗡️" sub="FIGHT" />
@@ -892,8 +1267,6 @@ export default function App() {
   );
 }
 
-// ─── 공용 컴포넌트 ────────────────────────────────────────────
-
 function NavButton({ active, onClick, label, sub }: {
   active: boolean; onClick: () => void; label: string; sub: string;
 }) {
@@ -908,8 +1281,6 @@ function NavButton({ active, onClick, label, sub }: {
     </button>
   );
 }
-
-// ─── 서브 뷰 ─────────────────────────────────────────────────
 
 function RankingView() {
   const [rankings, setRankings] = useState<UserProfile[]>([]);
@@ -1034,7 +1405,6 @@ function AdminUserManagement() {
       >
         🐉 RESET BOSS HP ({DRAGON_MAX_HP})
       </button>
-
       <div className="flex gap-2">
         <input
           type="text"
@@ -1048,7 +1418,6 @@ function AdminUserManagement() {
           <UserPlus className="w-5 h-5" />
         </button>
       </div>
-
       <div className="space-y-3">
         {users.map((u) => (
           <div key={u.id} className="bg-[#000080] border-4 border-black p-3 space-y-2">
