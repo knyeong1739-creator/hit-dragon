@@ -993,7 +993,7 @@ export default function App() {
   const handleUltimate = async () => {
     if (!profile || !user || dragonHp <= 0 || combo < COMBO_MAX || ultimateActive) return;
     setUltimateActive(true);
-    playSound('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/u_vrs223ln83-loud-thunder-439064.mp3');
+    playSound('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/freesound_crunchpixstudio-hero-skill-attack-reveal-2-384976.mp3');
   };
 
   const handleUltimateComplete = async () => {
