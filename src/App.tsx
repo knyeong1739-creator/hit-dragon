@@ -993,7 +993,7 @@ export default function App() {
   const handleUltimate = async () => {
     if (!profile || !user || dragonHp <= 0 || combo < COMBO_MAX || ultimateActive) return;
     setUltimateActive(true);
-    playSound('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/freesound_crunchpixstudio-hero-skill-attack-reveal-2-384976.mp3');
+    playSound('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/u_vrs223ln83-loud-thunder-439064.mp3');
   };
 
   const handleUltimateComplete = async () => {
@@ -1035,10 +1035,14 @@ export default function App() {
         >
           <div className="bg-[#E52521] border-4 border-black p-6 shadow-[6px_6px_0px_black] mb-6">
             <div className="flex justify-center mb-4">
-              <img src={DRAGON_IMG} className="w-16 h-16 object-contain" style={{ imageRendering: 'pixelated' }} />
+              <img 
+                src="https://i.imgur.com/7avvYMk.png" 
+                className="w-full object-contain rounded-lg" 
+                alt="용두백타"
+              />
             </div>
             <h1 className="text-white text-center text-lg mb-1" style={marioStyle}>용두백타</h1>
-            <p className="text-[#FFD700] text-center text-[8px] mt-2" style={marioStyle}>INSERT COIN</p>
+            <p className="text-[#FFD700] text-center text-[8px] mt-2" style={marioStyle}>START</p>
           </div>
           <div className="bg-[#000080] border-4 border-black p-6 shadow-[6px_6px_0px_black]">
             {!showAdminLogin ? (
