@@ -837,6 +837,10 @@ export default function App() {
   const [attacking, setAttacking] = useState(false);
   const [superAttacking, setSuperAttacking] = useState(false);
   const [combo, setCombo] = useState(0);
+
+  useEffect(() => {
+    if (profile) setCombo(profile.combo ?? 0);
+  }, [profile?.combo]);
   const [ultimateActive, setUltimateActive] = useState(false);
 
   const [loginName, setLoginName] = useState('');
@@ -992,13 +996,15 @@ export default function App() {
       playSound('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/dragon-studio-sword-slice-2-393845.mp3');
     }
     setTimeout(() => setAttacking(false), 600);
-    setCombo((prev) => Math.min(prev + 1, COMBO_MAX));
+    const newCombo = Math.min((profile.combo ?? 0) + 1, COMBO_MAX);
+    setCombo(newCombo);
     try {
       await updateDoc(doc(db, 'dragon', 'state'), { hp: increment(-finalAmount) });
       await updateDoc(doc(db, 'users', user.uid), {
         hpReduced: increment(finalAmount),
         lastAttackDate: today,
         streak: triple ? 0 : newStreak,
+        combo: newCombo,
       });
     } catch (err) {
       alert('데미지 적용 중 오류가 발생했습니다.');
@@ -1012,12 +1018,14 @@ export default function App() {
     setAttacking(true);
     playSound('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/dragon-studio-sword-slice-2-393845.mp3');
     setTimeout(() => setAttacking(false), 600);
-    setCombo((prev) => Math.min(prev + 1, COMBO_MAX));
+    const newCombo = Math.min((profile.combo ?? 0) + 1, COMBO_MAX);
+    setCombo(newCombo);
     try {
       await updateDoc(doc(db, 'dragon', 'state'), { hp: increment(-0.5) });
       await updateDoc(doc(db, 'users', user.uid), {
         hpReduced: increment(0.5),
         lastMissionDate: today,
+        combo: newCombo,
       });
     } catch (err) {
       alert('온라인 선교 오류가 발생했습니다.');
@@ -1036,7 +1044,7 @@ export default function App() {
     if (!profile || !user) return;
     try {
       await updateDoc(doc(db, 'dragon', 'state'), { hp: increment(-20) });
-      await updateDoc(doc(db, 'users', user.uid), { hpReduced: increment(20) });
+      await updateDoc(doc(db, 'users', user.uid), { hpReduced: increment(20), combo: 0 });
     } catch (err) {
       console.error('필살기 데미지 적용 오류', err);
     }
