@@ -11,6 +11,7 @@ export interface UserProfile {
   streak?: number;
   lastAttackDate?: string;
   tripleUsed?: boolean;
+  combo?: number;
 }
 
 export interface Club {
