@@ -844,6 +844,12 @@ export default function App() {
   const [ultimateActive, setUltimateActive] = useState(false);
 
   const [loginName, setLoginName] = useState('');
+  const [loginStep, setLoginStep] = useState<'name' | 'setPin' | 'pin'>('name');
+  const [loginPin, setLoginPin] = useState('');
+  const [loginPinConfirm, setLoginPinConfirm] = useState('');
+  const [pendingUid, setPendingUid] = useState('');
+  const [pendingRegisteredUid, setPendingRegisteredUid] = useState('');
+  const [pendingOldData, setPendingOldData] = useState<any>(null);
   const [adminId, setAdminId] = useState('');
   const [adminPw, setAdminPw] = useState('');
   const [showAdminLogin, setShowAdminLogin] = useState(false);
@@ -912,48 +918,96 @@ export default function App() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginName.trim() || loginLoading) return;
-    setLoginLoading(true);
-    try {
-      const trimmedName = loginName.trim();
-      const nameQuery = query(collection(db, 'users'), where('name', '==', trimmedName), limit(1));
-      const nameSnap = await getDocs(nameQuery);
-      if (nameSnap.empty) {
-        alert('등록되지 않은 사용자입니다.\n관리자에게 문의해주세요.');
-        setLoginLoading(false);
-        return;
-      }
-      const registeredDoc = nameSnap.docs[0];
-      const registeredUid = registeredDoc.id;
-      const encodedName = btoa(encodeURIComponent(trimmedName));
-      const fakeEmail = `u${encodedName}${APP_DOMAIN}`.toLowerCase().replace(/[^a-z0-9@.]/g, 'x');
-      let uid = '';
+    if (loginLoading) return;
+
+    // ── Step 1: 이름 확인만 (Auth 로그인 안 함) ──
+    if (loginStep === 'name') {
+      if (!loginName.trim()) return;
+      setLoginLoading(true);
       try {
-        const result = await signInWithEmailAndPassword(auth, fakeEmail, APP_PASSWORD);
-        uid = result.user.uid;
-      } catch {
-        const result = await createUserWithEmailAndPassword(auth, fakeEmail, APP_PASSWORD);
-        uid = result.user.uid;
-      }
-      if (uid !== registeredUid) {
+        const nameQuery = query(collection(db, 'users'), where('name', '==', loginName.trim()), limit(1));
+        const nameSnap = await getDocs(nameQuery);
+        if (nameSnap.empty) { alert('등록되지 않은 사용자입니다.\n관리자에게 문의해주세요.'); return; }
+        const registeredDoc = nameSnap.docs[0];
         const oldData = registeredDoc.data();
-        await setDoc(doc(db, 'users', uid), {
-          name: oldData.name,
-          role: oldData.role ?? 'member',
-          clubId: oldData.clubId ?? null,
-          hpReduced: oldData.hpReduced ?? 0,
-          streak: oldData.streak ?? 0,
-          lastAttackDate: oldData.lastAttackDate ?? '',
-          lastLogin: new Date().toISOString(),
-        });
-        await deleteDoc(doc(db, 'users', registeredUid));
-      } else {
-        await updateDoc(doc(db, 'users', uid), { lastLogin: new Date().toISOString() });
+        setPendingRegisteredUid(registeredDoc.id);
+        setPendingOldData(oldData);
+        if (!oldData.pin) {
+          setLoginStep('setPin');
+        } else {
+          setLoginStep('pin');
+        }
+      } catch (err: any) {
+        alert('오류가 발생했습니다.\n' + err.message);
+      } finally {
+        setLoginLoading(false);
       }
-    } catch (err: any) {
-      alert('로그인 중 오류가 발생했습니다.\n' + err.message);
-    } finally {
-      setLoginLoading(false);
+      return;
+    }
+
+    // ── Step 2: 비밀번호 설정 ──
+    if (loginStep === 'setPin') {
+      if (loginPin.length !== 4) { alert('4자리 숫자를 입력해주세요.'); return; }
+      if (loginPin !== loginPinConfirm) { alert('비밀번호가 일치하지 않습니다.'); return; }
+      setLoginLoading(true);
+      try {
+        await finalizeLogin(true);
+      } catch (err: any) {
+        alert('오류: ' + err.message);
+      } finally {
+        setLoginLoading(false);
+      }
+      return;
+    }
+
+    // ── Step 3: 비밀번호 확인 ──
+    if (loginStep === 'pin') {
+      if (loginPin !== pendingOldData.pin) { alert('비밀번호가 틀렸습니다.'); setLoginPin(''); return; }
+      setLoginLoading(true);
+      try {
+        await finalizeLogin(false);
+      } catch (err: any) {
+        alert('오류: ' + err.message);
+      } finally {
+        setLoginLoading(false);
+      }
+    }
+  };
+
+  const finalizeLogin = async (savePin: boolean) => {
+    const registeredUid = pendingRegisteredUid;
+    const oldData = pendingOldData;
+    const encodedName = btoa(encodeURIComponent(loginName.trim()));
+    const fakeEmail = `u${encodedName}${APP_DOMAIN}`.toLowerCase().replace(/[^a-z0-9@.]/g, 'x');
+
+    // Auth 로그인은 여기서만
+    let uid = '';
+    try {
+      const result = await signInWithEmailAndPassword(auth, fakeEmail, APP_PASSWORD);
+      uid = result.user.uid;
+    } catch {
+      const result = await createUserWithEmailAndPassword(auth, fakeEmail, APP_PASSWORD);
+      uid = result.user.uid;
+    }
+
+    if (uid !== registeredUid) {
+      await setDoc(doc(db, 'users', uid), {
+        name: oldData.name,
+        role: oldData.role ?? 'member',
+        clubId: oldData.clubId ?? null,
+        hpReduced: oldData.hpReduced ?? 0,
+        streak: oldData.streak ?? 0,
+        lastAttackDate: oldData.lastAttackDate ?? '',
+        lastLogin: new Date().toISOString(),
+        pin: savePin ? loginPin : (oldData.pin ?? ''),
+        combo: oldData.combo ?? 0,
+      });
+      await deleteDoc(doc(db, 'users', registeredUid));
+    } else {
+      await updateDoc(doc(db, 'users', uid), {
+        lastLogin: new Date().toISOString(),
+        ...(savePin ? { pin: loginPin } : {}),
+      });
     }
   };
 
@@ -1105,36 +1159,99 @@ export default function App() {
           <div className="bg-[#000080] border-4 border-black p-6 shadow-[6px_6px_0px_black]">
             {!showAdminLogin ? (
               <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                  {/* 8px → 15px */}
-                  <label className="text-white text-[15px] block mb-2" style={marioStyle}>PLAYER NAME</label>
-                  <input
-                    type="text"
-                    value={loginName}
-                    onChange={(e) => setLoginName(e.target.value)}
-                    placeholder="이름 입력"
-                    className="w-full px-3 py-2 bg-black text-white border-4 border-white text-sm focus:outline-none focus:border-[#FFD700]"
-                    style={marioStyle}
-                    required
-                  />
-                </div>
+                {loginStep === 'name' && (
+                  <div>
+                    <label className="text-white text-[15px] block mb-2" style={marioStyle}>PLAYER NAME</label>
+                    <input
+                      type="text"
+                      value={loginName}
+                      onChange={(e) => setLoginName(e.target.value)}
+                      placeholder="이름 입력"
+                      className="w-full px-3 py-2 bg-black text-white border-4 border-white text-sm focus:outline-none focus:border-[#FFD700]"
+                      style={marioStyle}
+                      required
+                    />
+                  </div>
+                )}
+                {loginStep === 'setPin' && (
+                  <>
+                    <p className="text-[#FFD700] text-[13px] text-center" style={marioStyle}>🔐 비밀번호 설정</p>
+                    <p className="text-white text-[11px] text-center" style={marioStyle}>{loginName}</p>
+                    <div>
+                      <label className="text-white text-[13px] block mb-2" style={marioStyle}>새 비밀번호 (4자리)</label>
+                      <input
+                        type="password"
+                        value={loginPin}
+                        onChange={(e) => setLoginPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                        placeholder="0000"
+                        maxLength={4}
+                        className="w-full px-3 py-2 bg-black text-white border-4 border-white text-center text-2xl focus:outline-none focus:border-[#FFD700] tracking-widest"
+                        style={marioStyle}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-white text-[13px] block mb-2" style={marioStyle}>비밀번호 확인</label>
+                      <input
+                        type="password"
+                        value={loginPinConfirm}
+                        onChange={(e) => setLoginPinConfirm(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                        placeholder="0000"
+                        maxLength={4}
+                        className="w-full px-3 py-2 bg-black text-white border-4 border-white text-center text-2xl focus:outline-none focus:border-[#FFD700] tracking-widest"
+                        style={marioStyle}
+                        required
+                      />
+                    </div>
+                  </>
+                )}
+                {loginStep === 'pin' && (
+                  <>
+                    <p className="text-[#FFD700] text-[13px] text-center" style={marioStyle}>🔐 비밀번호 입력</p>
+                    <p className="text-white text-[11px] text-center" style={marioStyle}>{loginName}</p>
+                    <div>
+                      <label className="text-white text-[13px] block mb-2" style={marioStyle}>비밀번호 (4자리)</label>
+                      <input
+                        type="password"
+                        value={loginPin}
+                        onChange={(e) => setLoginPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                        placeholder="0000"
+                        maxLength={4}
+                        className="w-full px-3 py-2 bg-black text-white border-4 border-white text-center text-2xl focus:outline-none focus:border-[#FFD700] tracking-widest"
+                        style={marioStyle}
+                        required
+                      />
+                    </div>
+                  </>
+                )}
                 <button
                   type="submit"
                   disabled={loginLoading}
                   className="w-full py-3 bg-[#FFD700] text-black border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all text-xs disabled:opacity-60"
                   style={marioStyle}
                 >
-                  {loginLoading ? 'LOADING...' : '▶ START'}
+                  {loginLoading ? 'LOADING...' : loginStep === 'name' ? '▶ NEXT' : loginStep === 'setPin' ? '▶ 등록' : '▶ 입장'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowAdminLogin(true)}
-                  // 8px → 15px
-                  className="w-full py-2 text-[#888] text-[15px] hover:text-white transition"
-                  style={marioStyle}
-                >
-                  ADMIN LOGIN
-                </button>
+                {loginStep !== 'name' && (
+                  <button
+                    type="button"
+                    onClick={() => { setLoginStep('name'); setLoginPin(''); setLoginPinConfirm(''); }}
+                    className="w-full py-2 text-[#888] text-[13px] hover:text-white transition"
+                    style={marioStyle}
+                  >
+                    ◀ BACK
+                  </button>
+                )}
+                {loginStep === 'name' && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminLogin(true)}
+                    className="w-full py-2 text-[#888] text-[15px] hover:text-white transition"
+                    style={marioStyle}
+                  >
+                    ADMIN LOGIN
+                  </button>
+                )}
               </form>
             ) : (
               <form onSubmit={handleAdminLogin} className="space-y-4">
