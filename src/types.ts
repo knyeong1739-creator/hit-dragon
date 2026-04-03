@@ -12,6 +12,7 @@ export interface UserProfile {
   lastAttackDate?: string;
   tripleUsed?: boolean;
   combo?: number;
+  pin?: string;
 }
 
 export interface Club {
