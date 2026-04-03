@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   collection,
   doc,
@@ -849,10 +849,14 @@ export default function App() {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
 
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [bgmOn, setBgmOn] = useState(true);
+
   useEffect(() => {
     const audio = new Audio('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/bgm.mp3');
     audio.loop = true;
     audio.volume = 0.3;
+    audioRef.current = audio;
     const start = () => {
       audio.play().catch(() => {});
       document.removeEventListener('click', start);
@@ -863,6 +867,17 @@ export default function App() {
       audio.pause();
     };
   }, []);
+
+  const toggleBgm = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (bgmOn) {
+      audio.pause();
+    } else {
+      audio.play().catch(() => {});
+    }
+    setBgmOn((v) => !v);
+  };
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -1208,6 +1223,9 @@ export default function App() {
               {/* 8px → 15px */}
               <p className="text-[#FFD700] text-[15px]">🔥 {myStreak}</p>
             </div>
+            <button onClick={toggleBgm} className="p-1 bg-black/30 border-2 border-black">
+              <span className="text-white text-sm">{bgmOn ? '🔊' : '🔇'}</span>
+            </button>
             <button onClick={() => auth.signOut()} className="p-1 bg-black/30 border-2 border-black">
               <LogOut className="w-4 h-4 text-white" />
             </button>
