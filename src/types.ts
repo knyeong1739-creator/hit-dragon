@@ -13,6 +13,7 @@ export interface UserProfile {
   tripleUsed?: boolean;
   combo?: number;
   pin?: string;
+  lastEvangelismDate?: string;
 }
 
 export interface Club {
