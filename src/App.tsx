@@ -1138,6 +1138,26 @@ export default function App() {
       alert('온라인 선교 오류가 발생했습니다.');
     }
   };
+  const handleEvangelism = async () => {
+    if (!profile || !user || dragonHp <= 0 || attacking || ultimateActive) return;
+    const today = new Date().toISOString().slice(0, 10);
+    if (profile.lastEvangelismDate === today) return;
+    setAttacking(true);
+    playSound('https://cdn.jsdelivr.net/gh/knyeong1739-creator/musiccccc@main/dragon-studio-sword-slice-2-393845.mp3');
+    setTimeout(() => setAttacking(false), 600);
+    const newCombo = Math.min((profile.combo ?? 0) + 1, COMBO_MAX);
+    setCombo(newCombo);
+    try {
+      await updateDoc(doc(db, 'dragon', 'state'), { hp: increment(-1) });
+      await updateDoc(doc(db, 'users', user.uid), {
+        hpReduced: increment(1),
+        lastEvangelismDate: today,
+        combo: newCombo,
+      });
+    } catch (err) {
+      alert('전도 오류가 발생했습니다.');
+    }
+  };
 
   const handleUltimate = async () => {
     if (!profile || !user || dragonHp <= 0 || combo < COMBO_MAX || ultimateActive) return;
@@ -1436,13 +1456,16 @@ export default function App() {
                     <div className="text-[#FFD700] text-[15px] mt-1">-1 HP</div>
                   </button>
                   <button
-                    onClick={() => reduceHP(1)}
-                    disabled={dragonHp <= 0 || attacking || ultimateActive}
+                    onClick={() => handleEvangelism()}
+                    disabled={dragonHp <= 0 || attacking || ultimateActive || profile.lastEvangelismDate === new Date().toISOString().slice(0, 10)}
                     className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     style={marioStyle}
                   >
                     <div className="text-[15px]">전도 1회</div>
                     <div className="text-[#FFD700] text-[15px] mt-1">-1 HP</div>
+                    {profile.lastEvangelismDate === new Date().toISOString().slice(0, 10) && (
+                      <div className="text-[#FF8888] text-[13px] mt-1">오늘 완료!</div>
+                    )}
                   </button>
                   <button
                     onClick={() => handleMission()}
