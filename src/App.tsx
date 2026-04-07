@@ -1149,7 +1149,7 @@ export default function App() {
     setUltimateActive(false);
     setCombo(0);
     if (!profile || !user) return;
-    const isCritical = Math.random() < 1; // 1% 확률
+    const isCritical = Math.random() < 0.01; // 1% 확률
     const damage = isCritical ? 100 : 20;
     try {
       await updateDoc(doc(db, 'dragon', 'state'), { hp: increment(-damage) });
