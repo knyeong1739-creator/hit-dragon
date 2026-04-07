@@ -449,12 +449,14 @@ function BattleScene({
   superAttacking,
   ultimateActive,
   onUltimateComplete,
+  criticalHit,
 }: {
   dragonHp: number;
   attacking: boolean;
   superAttacking: boolean;
   ultimateActive: boolean;
   onUltimateComplete: () => void;
+  criticalHit: boolean;
 }) {
   const phase = getDragonPhase(dragonHp, DRAGON_MAX_HP);
   const phaseLabel = getPhaseLabel(phase);
@@ -648,6 +650,41 @@ function BattleScene({
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {criticalHit && (
+          <motion.div
+            className="absolute inset-0 flex flex-col items-center justify-center z-[60] pointer-events-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              style={{ background: 'rgba(0,0,0,0.5)' }}
+              className="absolute inset-0"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.7, 0.5] }}
+            />
+            <motion.p
+              className="relative text-[#FFD700] z-10"
+              style={{ ...marioStyle, fontSize: '28px', textShadow: '0 0 20px #FFD700, 0 0 40px #FF8800' }}
+              initial={{ scale: 0.2, y: 30 }}
+              animate={{ scale: [0.2, 1.3, 1], y: [30, -10, 0] }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+            >
+              🎉 CRITICAL!!
+            </motion.p>
+            <motion.p
+              className="relative text-white z-10 mt-2"
+              style={{ ...marioStyle, fontSize: '20px' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              -100 HP!!
+            </motion.p>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="absolute top-3 left-3 right-3 z-20">
         {dragonHp > 0 && (
           <div className="bg-black/60 p-2 border-2 border-black">
@@ -842,6 +879,7 @@ export default function App() {
     if (profile) setCombo(profile.combo ?? 0);
   }, [profile?.combo]);
   const [ultimateActive, setUltimateActive] = useState(false);
+  const [criticalHit, setCriticalHit] = useState(false);
 
   const [loginName, setLoginName] = useState('');
   const [loginStep, setLoginStep] = useState<'name' | 'setPin' | 'pin'>('name');
@@ -1111,9 +1149,15 @@ export default function App() {
     setUltimateActive(false);
     setCombo(0);
     if (!profile || !user) return;
+    const isCritical = Math.random() < 1; // 1% 확률
+    const damage = isCritical ? 100 : 20;
     try {
-      await updateDoc(doc(db, 'dragon', 'state'), { hp: increment(-20) });
-      await updateDoc(doc(db, 'users', user.uid), { hpReduced: increment(20), combo: 0 });
+      await updateDoc(doc(db, 'dragon', 'state'), { hp: increment(-damage) });
+      await updateDoc(doc(db, 'users', user.uid), { hpReduced: increment(damage), combo: 0 });
+      if (isCritical) {
+        setCriticalHit(true);
+        setTimeout(() => setCriticalHit(false), 2500);
+      }
     } catch (err) {
       console.error('필살기 데미지 적용 오류', err);
     }
@@ -1359,6 +1403,7 @@ export default function App() {
                   superAttacking={superAttacking}
                   ultimateActive={ultimateActive}
                   onUltimateComplete={handleUltimateComplete}
+                  criticalHit={criticalHit}
                 />
                 <div className="grid grid-cols-2 gap-3">
                   <button
@@ -1367,18 +1412,7 @@ export default function App() {
                     className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     style={marioStyle}
                   >
-                    {/* 8px → 15px */}
                     <div className="text-[15px]">1주제 발표</div>
-                    <div className="text-[#FFD700] text-[15px] mt-1">-1 HP</div>
-                  </button>
-                  <button
-                    onClick={() => reduceHP(1)}
-                    disabled={dragonHp <= 0 || attacking || ultimateActive}
-                    className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={marioStyle}
-                  >
-                    {/* 8px → 15px */}
-                    <div className="text-[15px]">1주제 듣기</div>
                     <div className="text-[#FFD700] text-[15px] mt-1">-1 HP</div>
                   </button>
                   <button
@@ -1387,9 +1421,28 @@ export default function App() {
                     className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     style={marioStyle}
                   >
-                    {/* 8px → 15px */}
                     <div className="text-[15px]">1주제 평가</div>
                     <div className="text-[#FFD700] text-[15px] mt-1">-2 HP</div>
+                  </button>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    onClick={() => reduceHP(1)}
+                    disabled={dragonHp <= 0 || attacking || ultimateActive}
+                    className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={marioStyle}
+                  >
+                    <div className="text-[15px]">1주제 듣기</div>
+                    <div className="text-[#FFD700] text-[15px] mt-1">-1 HP</div>
+                  </button>
+                  <button
+                    onClick={() => reduceHP(1)}
+                    disabled={dragonHp <= 0 || attacking || ultimateActive}
+                    className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={marioStyle}
+                  >
+                    <div className="text-[15px]">전도 1회</div>
+                    <div className="text-[#FFD700] text-[15px] mt-1">-1 HP</div>
                   </button>
                   <button
                     onClick={() => handleMission()}
@@ -1397,11 +1450,9 @@ export default function App() {
                     className="py-4 bg-[#00A800] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     style={marioStyle}
                   >
-                    {/* 8px → 15px */}
                     <div className="text-[15px]">온라인 선교</div>
                     <div className="text-[#FFD700] text-[15px] mt-1">-0.5 HP</div>
                     {profile.lastMissionDate === new Date().toISOString().slice(0, 10) && (
-                      // 7px → 13px
                       <div className="text-[#FF8888] text-[13px] mt-1">오늘 완료!</div>
                     )}
                   </button>
