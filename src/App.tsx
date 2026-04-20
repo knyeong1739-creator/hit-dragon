@@ -963,9 +963,27 @@ export default function App() {
       if (!loginName.trim()) return;
       setLoginLoading(true);
       try {
-        const nameQuery = query(collection(db, 'users'), where('name', '==', loginName.trim()), limit(1));
-        const nameSnap = await getDocs(nameQuery);
-        if (nameSnap.empty) { alert('등록되지 않은 사용자입니다.\n관리자에게 문의해주세요.'); return; }
+        const trimmedName = loginName.trim();
+    
+        // 1차: 정확히 일치
+        const nameQuery = query(collection(db, 'users'), where('name', '==', trimmedName), limit(1));
+        let nameSnap = await getDocs(nameQuery);
+    
+        // 2차: 공백 차이 등으로 못 찾은 경우 전체 스캔
+        if (nameSnap.empty) {
+          const allSnap = await getDocs(collection(db, 'users'));
+          const matched = allSnap.docs.find(d =>
+            (d.data().name ?? '').replace(/\s/g, '') === trimmedName.replace(/\s/g, '')
+          );
+          if (matched) {
+            nameSnap = { empty: false, docs: [matched] } as any;
+          }
+        }
+    
+        if (nameSnap.empty) {
+          alert(`"${trimmedName}" 으로 등록된 사용자가 없습니다.\n이름을 다시 확인해주세요.`);
+          return;
+        }
         const registeredDoc = nameSnap.docs[0];
         const oldData = registeredDoc.data();
         setPendingRegisteredUid(registeredDoc.id);
