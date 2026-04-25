@@ -80,6 +80,183 @@ async function ensureDragonExists() {
   }
 }
 
+// ─── 킬 카드 생성 ────────────────────────────────────────────
+async function generateKillCard({
+  killerName,
+  score,
+  clubId,
+}: {
+  killerName: string;
+  score: number;
+  clubId?: string | null;
+}) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 480;
+  canvas.height = 640;
+  const ctx = canvas.getContext('2d')!;
+
+  // 배경
+  ctx.fillStyle = '#1a0033';
+  ctx.fillRect(0, 0, 480, 640);
+
+  // 별빛 배경 장식
+  const starPositions = [
+    [30, 30], [80, 60], [150, 20], [200, 50], [270, 25],
+    [330, 55], [400, 30], [450, 60], [60, 600], [130, 615],
+    [220, 600], [310, 610], [390, 600], [450, 615],
+  ];
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  starPositions.forEach(([x, y]) => {
+    ctx.fillRect(x, y, 2, 2);
+  });
+
+  // 외곽 테두리 (금색)
+  ctx.strokeStyle = '#FFD700';
+  ctx.lineWidth = 8;
+  ctx.strokeRect(8, 8, 464, 624);
+
+  // 내부 테두리 (주황)
+  ctx.strokeStyle = '#FF8C00';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(18, 18, 444, 604);
+
+  // 픽셀 폰트 로드 대기
+  await document.fonts.ready;
+
+  // ── 상단 타이틀 배경 블록 ──
+  ctx.fillStyle = '#E52521';
+  ctx.fillRect(18, 18, 444, 90);
+
+  // 상단 타이틀
+  ctx.fillStyle = '#FFD700';
+  ctx.font = "bold 26px 'Galmuri11', 'Press Start 2P', monospace";
+  ctx.textAlign = 'center';
+  ctx.shadowColor = '#FF0000';
+  ctx.shadowBlur = 8;
+  ctx.fillText('🐉 BOSS DEFEATED!', 240, 58);
+  ctx.shadowBlur = 0;
+
+  // 부제
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = "15px 'Galmuri11', 'Press Start 2P', monospace";
+  ctx.fillText('용두백타 클리어!', 240, 90);
+
+  // 픽셀 구분선
+  ctx.fillStyle = '#FFD700';
+  for (let x = 18; x < 462; x += 8) {
+    ctx.fillRect(x, 108, 6, 4);
+  }
+
+  // 죽은 용 이미지
+  const dragonImg = new Image();
+  dragonImg.crossOrigin = 'anonymous';
+  await new Promise<void>((res) => {
+    dragonImg.onload = () => res();
+    dragonImg.onerror = () => res();
+    dragonImg.src = DRAGON_IMG_DEAD;
+  });
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(dragonImg, 155, 118, 170, 170);
+
+  // 용 주변 픽셀 별 장식
+  ctx.font = '18px serif';
+  ctx.textAlign = 'left';
+  ['💀', '⚡', '✨', '💥'].forEach((emoji, i) => {
+    const positions = [[50, 160], [390, 150], [55, 250], [385, 260]];
+    ctx.fillText(emoji, positions[i][0], positions[i][1]);
+  });
+
+  // 픽셀 구분선
+  ctx.fillStyle = '#FF8C00';
+  for (let x = 18; x < 462; x += 8) {
+    ctx.fillRect(x, 300, 6, 4);
+  }
+
+  // ── 막타 유저 섹션 배경 ──
+  ctx.fillStyle = 'rgba(255, 215, 0, 0.08)';
+  ctx.fillRect(26, 310, 428, 110);
+
+  // 막타 레이블
+  ctx.fillStyle = '#AA88FF';
+  ctx.font = "13px 'Galmuri11', 'Press Start 2P', monospace";
+  ctx.textAlign = 'left';
+  ctx.fillText('⚔️  최후의 일격', 44, 340);
+
+  // 막타 유저 이름
+  ctx.fillStyle = '#FFD700';
+  ctx.font = "bold 24px 'Galmuri11', 'Press Start 2P', monospace";
+  ctx.shadowColor = '#FFD700';
+  ctx.shadowBlur = 6;
+  ctx.fillText(killerName, 44, 378);
+  ctx.shadowBlur = 0;
+
+  // 클럽/길드
+  if (clubId) {
+    ctx.fillStyle = '#88CCFF';
+    ctx.font = "13px 'Galmuri11', 'Press Start 2P', monospace";
+    ctx.fillText(`[ ${clubId} ]`, 44, 408);
+  }
+
+  // 픽셀 구분선
+  ctx.fillStyle = '#444466';
+  for (let x = 18; x < 462; x += 8) {
+    ctx.fillRect(x, 430, 6, 3);
+  }
+
+  // ── SCORE 섹션 ──
+  ctx.fillStyle = 'rgba(0, 255, 136, 0.06)';
+  ctx.fillRect(26, 438, 200, 75);
+
+  ctx.fillStyle = '#AAAAAA';
+  ctx.font = "12px 'Galmuri11', 'Press Start 2P', monospace";
+  ctx.textAlign = 'left';
+  ctx.fillText('TOTAL SCORE', 44, 462);
+
+  ctx.fillStyle = '#00FF88';
+  ctx.font = "bold 22px 'Galmuri11', 'Press Start 2P', monospace";
+  ctx.shadowColor = '#00FF88';
+  ctx.shadowBlur = 5;
+  ctx.fillText(String(score).padStart(6, '0'), 44, 497);
+  ctx.shadowBlur = 0;
+
+  // ── 날짜/시간 섹션 ──
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  ctx.fillStyle = '#666688';
+  ctx.font = "11px 'Galmuri11', 'Press Start 2P', monospace";
+  ctx.textAlign = 'right';
+  ctx.fillText(dateStr, 436, 462);
+  ctx.fillText(timeStr, 436, 480);
+
+  // 픽셀 구분선
+  ctx.fillStyle = '#FFD700';
+  for (let x = 18; x < 462; x += 8) {
+    ctx.fillRect(x, 522, 6, 4);
+  }
+
+  // ── 하단 파티클 장식 ──
+  const bottomEmojis = ['⭐', '✨', '💥', '🌟', '⚡', '💫'];
+  ctx.font = '16px serif';
+  ctx.textAlign = 'left';
+  bottomEmojis.forEach((emoji, i) => {
+    ctx.fillText(emoji, 30 + i * 70, 558);
+  });
+
+  // 워터마크
+  ctx.fillStyle = '#444455';
+  ctx.font = "11px 'Galmuri11', 'Press Start 2P', monospace";
+  ctx.textAlign = 'center';
+  ctx.fillText('용두백타 · YONGDU BATTLE', 240, 600);
+
+  // 다운로드
+  const link = document.createElement('a');
+  link.download = `용두백타_BOSS_CLEAR_${killerName}_${dateStr}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
 // ─── ErrorBoundary ───────────────────────────────────────────
 interface ErrorBoundaryProps { children?: React.ReactNode; }
 interface ErrorBoundaryState { hasError: boolean; msg: string; }
@@ -208,7 +385,6 @@ function UltimateSkillScene({ onComplete }: { onComplete: () => void }) {
       className="absolute inset-0 z-50 overflow-hidden"
       style={{ background: 'radial-gradient(ellipse at center, #1a0033 0%, #000 100%)' }}
     >
-      {/* 별빛 배경 */}
       {Array.from({ length: 30 }).map((_, i) => (
         <motion.div
           key={i}
@@ -224,7 +400,6 @@ function UltimateSkillScene({ onComplete }: { onComplete: () => void }) {
         />
       ))}
 
-      {/* ULTIMATE 텍스트 */}
       <motion.div
         className="absolute top-4 left-0 right-0 flex justify-center z-30"
         initial={{ opacity: 0, y: -20 }}
@@ -241,7 +416,6 @@ function UltimateSkillScene({ onComplete }: { onComplete: () => void }) {
         </motion.p>
       </motion.div>
 
-      {/* 용 (중앙 하단 고정) */}
       <motion.div
         className="absolute z-10"
         style={{ left: '50%', bottom: '8%', transform: 'translateX(-50%)' }}
@@ -273,7 +447,6 @@ function UltimateSkillScene({ onComplete }: { onComplete: () => void }) {
         )}
       </motion.div>
 
-      {/* ── 여캐: 오른쪽에서 달려와서 도약 → 공중제비 → 내려찍기 ── */}
       <motion.div
         className="absolute z-20"
         style={{ bottom: '12%' }}
@@ -316,7 +489,6 @@ function UltimateSkillScene({ onComplete }: { onComplete: () => void }) {
         />
       </motion.div>
 
-      {/* ── 남캐: 왼쪽에서 달려와서 도약 → 공중제비 → 내려찍기 ── */}
       <motion.div
         className="absolute z-20"
         style={{ bottom: '12%' }}
@@ -359,7 +531,6 @@ function UltimateSkillScene({ onComplete }: { onComplete: () => void }) {
         />
       </motion.div>
 
-      {/* 여캐 강하 빔 (phase 3) — 오른쪽 */}
       {phase >= 3 && (
         <motion.div
           className="absolute z-25"
@@ -372,7 +543,6 @@ function UltimateSkillScene({ onComplete }: { onComplete: () => void }) {
         </motion.div>
       )}
 
-      {/* 남캐 강하 빔 (phase 3) — 왼쪽 */}
       {phase >= 3 && (
         <motion.div
           className="absolute z-25"
@@ -385,7 +555,6 @@ function UltimateSkillScene({ onComplete }: { onComplete: () => void }) {
         </motion.div>
       )}
 
-      {/* 피니시 텍스트 */}
       {phase >= 4 && (
         <motion.div
           className="absolute inset-0 flex flex-col items-center justify-center z-40"
@@ -396,14 +565,12 @@ function UltimateSkillScene({ onComplete }: { onComplete: () => void }) {
           <p className="text-[#FFD700] text-sm mb-2" style={marioStyle}>
             💥 COMBO FINISH! 💥
           </p>
-          {/* 8px → 15px */}
           <p className="text-white text-[15px]" style={marioStyle}>
             -20 HP DEALT!
           </p>
         </motion.div>
       )}
 
-      {/* 화면 전체 번쩍임 (phase 3) */}
       <AnimatePresence>
         {phase === 3 && (
           <motion.div
@@ -417,7 +584,6 @@ function UltimateSkillScene({ onComplete }: { onComplete: () => void }) {
         )}
       </AnimatePresence>
 
-      {/* 파티클 (phase 4) */}
       {phase >= 4 && Array.from({ length: 12 }).map((_, i) => (
         <motion.div
           key={i}
@@ -685,16 +851,15 @@ function BattleScene({
           </motion.div>
         )}
       </AnimatePresence>
+
       <div className="absolute top-3 left-3 right-3 z-20">
         {dragonHp > 0 && (
           <div className="bg-black/60 p-2 border-2 border-black">
             <div className="flex justify-between items-center mb-1">
-              {/* 8px → 15px */}
               <span className="text-white text-[15px]" style={marioStyle}>🐉 BOSS HP</span>
               <div className="flex items-center gap-2">
                 {phaseLabel && (
                   <motion.span
-                    // 7px → 13px
                     className="text-[13px]"
                     style={{ ...marioStyle, color: phaseLabel.color }}
                     animate={{ opacity: [1, 0.2, 1] }}
@@ -703,7 +868,6 @@ function BattleScene({
                     {phaseLabel.text}
                   </motion.span>
                 )}
-                {/* 8px → 15px */}
                 <span className="text-[#FFD700] text-[15px]" style={marioStyle}>
                   {Math.max(0, dragonHp).toFixed(1)}/{DRAGON_MAX_HP.toFixed(1)}
                 </span>
@@ -765,7 +929,6 @@ function ComboGauge({
     >
       <div className="flex items-center justify-between mb-2">
         <motion.span
-          // 8px → 15px
           className="text-[15px]"
           style={{ ...marioStyle, color: isFull ? '#FFD700' : '#AA88FF' }}
           animate={isFull ? { opacity: [1, 0.3, 1] } : { opacity: 1 }}
@@ -773,7 +936,6 @@ function ComboGauge({
         >
           ⚔️ COMBO GAUGE
         </motion.span>
-        {/* 8px → 15px */}
         <span className="text-[15px]" style={{ ...marioStyle, color: isFull ? '#FFD700' : '#FFFFFF' }}>
           {combo} / {maxCombo}
         </span>
@@ -837,7 +999,6 @@ function ComboGauge({
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={onUltimate}
             disabled={disabled}
-            // 9px → 16px
             className="w-full py-3 border-4 border-black text-black text-[16px] disabled:opacity-60 disabled:cursor-not-allowed"
             style={{
               ...marioStyle,
@@ -848,14 +1009,12 @@ function ComboGauge({
           >
             🌀 필살기 발동! 🌀
             <br />
-            {/* 7px → 13px */}
             <span style={{ color: '#4B0082', fontSize: '13px' }}>-20 HP COMBO FINISH</span>
           </motion.button>
         )}
       </AnimatePresence>
 
       {!isFull && (
-        // 7px → 13px
         <p className="text-center text-[13px] text-[#AA88FF]" style={marioStyle}>
           공격 {maxCombo - combo}회 더 하면 필살기 해금!
         </p>
@@ -878,6 +1037,7 @@ export default function App() {
   useEffect(() => {
     if (profile) setCombo(profile.combo ?? 0);
   }, [profile?.combo]);
+
   const [ultimateActive, setUltimateActive] = useState(false);
   const [criticalHit, setCriticalHit] = useState(false);
 
@@ -964,11 +1124,11 @@ export default function App() {
       setLoginLoading(true);
       try {
         const trimmedName = loginName.trim();
-    
+
         // 1차: 정확히 일치
         const nameQuery = query(collection(db, 'users'), where('name', '==', trimmedName), limit(1));
         let nameSnap = await getDocs(nameQuery);
-    
+
         // 2차: 공백 차이 등으로 못 찾은 경우 전체 스캔
         if (nameSnap.empty) {
           const allSnap = await getDocs(collection(db, 'users'));
@@ -979,7 +1139,7 @@ export default function App() {
             nameSnap = { empty: false, docs: [matched] } as any;
           }
         }
-    
+
         if (nameSnap.empty) {
           alert(`"${trimmedName}" 으로 등록된 사용자가 없습니다.\n이름을 다시 확인해주세요.`);
           return;
@@ -1036,7 +1196,6 @@ export default function App() {
     const encodedName = btoa(encodeURIComponent(loginName.trim()));
     const fakeEmail = `u${encodedName}${APP_DOMAIN}`.toLowerCase().replace(/[^a-z0-9@.]/g, 'x');
 
-    // Auth 로그인은 여기서만
     let uid = '';
     try {
       const result = await signInWithEmailAndPassword(auth, fakeEmail, APP_PASSWORD);
@@ -1131,6 +1290,16 @@ export default function App() {
         streak: triple ? 0 : newStreak,
         combo: newCombo,
       });
+
+      // ── 막타 감지 → 킬 카드 생성 ──
+      const newHp = dragonHp - finalAmount;
+      if (newHp <= 0) {
+        await generateKillCard({
+          killerName: profile.name,
+          score: (profile.hpReduced ?? 0) + finalAmount,
+          clubId: profile.clubId,
+        });
+      }
     } catch (err) {
       alert('데미지 적용 중 오류가 발생했습니다.');
     }
@@ -1152,10 +1321,21 @@ export default function App() {
         lastMissionDate: today,
         combo: newCombo,
       });
+
+      // ── 막타 감지 → 킬 카드 생성 ──
+      const newHp = dragonHp - 0.5;
+      if (newHp <= 0) {
+        await generateKillCard({
+          killerName: profile.name,
+          score: (profile.hpReduced ?? 0) + 0.5,
+          clubId: profile.clubId,
+        });
+      }
     } catch (err) {
       alert('온라인 선교 오류가 발생했습니다.');
     }
   };
+
   const handleEvangelism = async () => {
     if (!profile || !user || dragonHp <= 0 || attacking || ultimateActive) return;
     const today = new Date().toISOString().slice(0, 10);
@@ -1172,6 +1352,16 @@ export default function App() {
         lastEvangelismDate: today,
         combo: newCombo,
       });
+
+      // ── 막타 감지 → 킬 카드 생성 ──
+      const newHp = dragonHp - 1;
+      if (newHp <= 0) {
+        await generateKillCard({
+          killerName: profile.name,
+          score: (profile.hpReduced ?? 0) + 1,
+          clubId: profile.clubId,
+        });
+      }
     } catch (err) {
       alert('전도 오류가 발생했습니다.');
     }
@@ -1187,11 +1377,22 @@ export default function App() {
     setUltimateActive(false);
     setCombo(0);
     if (!profile || !user) return;
-    const isCritical = Math.random() < 0.01; // 1% 확률
+    const isCritical = Math.random() < 0.01;
     const damage = isCritical ? 100 : 20;
     try {
       await updateDoc(doc(db, 'dragon', 'state'), { hp: increment(-damage) });
       await updateDoc(doc(db, 'users', user.uid), { hpReduced: increment(damage), combo: 0 });
+
+      // ── 막타 감지 → 킬 카드 생성 ──
+      const newHp = dragonHp - damage;
+      if (newHp <= 0) {
+        await generateKillCard({
+          killerName: profile.name,
+          score: (profile.hpReduced ?? 0) + damage,
+          clubId: profile.clubId,
+        });
+      }
+
       if (isCritical) {
         setCriticalHit(true);
         setTimeout(() => setCriticalHit(false), 2500);
@@ -1235,7 +1436,6 @@ export default function App() {
               />
             </div>
             <h1 className="text-white text-center text-lg mb-1" style={marioStyle}>용두백타</h1>
-            {/* 8px → 15px */}
             <p className="text-[#FFD700] text-center text-[15px] mt-2" style={marioStyle}>START</p>
           </div>
           <div className="bg-[#000080] border-4 border-black p-6 shadow-[6px_6px_0px_black]">
@@ -1338,7 +1538,6 @@ export default function App() {
             ) : (
               <form onSubmit={handleAdminLogin} className="space-y-4">
                 <div>
-                  {/* 8px → 15px */}
                   <label className="text-white text-[15px] block mb-2" style={marioStyle}>ADMIN ID</label>
                   <input
                     type="text"
@@ -1350,7 +1549,6 @@ export default function App() {
                   />
                 </div>
                 <div>
-                  {/* 8px → 15px */}
                   <label className="text-white text-[15px] block mb-2" style={marioStyle}>PASSWORD</label>
                   <input
                     type="password"
@@ -1372,7 +1570,6 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setShowAdminLogin(false)}
-                  // 8px → 15px
                   className="w-full py-2 text-[#888] text-[15px] hover:text-white transition"
                   style={marioStyle}
                 >
@@ -1401,17 +1598,14 @@ export default function App() {
 
         <header className="relative z-10 px-4 py-3 flex justify-between items-center bg-[#E52521] border-b-4 border-black">
           <div style={marioStyle}>
-            {/* 8px → 15px */}
             <p className="text-[#FFD700] text-[15px]">PLAYER</p>
             <p className="text-white text-[10px] mt-1">{profile.name}</p>
           </div>
           <div className="text-center" style={marioStyle}>
-            {/* 8px → 15px */}
             <p className="text-[#FFD700] text-[15px]">SCORE</p>
             <p className="text-white text-[10px] mt-1">{String(profile.hpReduced).padStart(6, '0')}</p>
           </div>
           <div className="text-center" style={marioStyle}>
-            {/* 8px → 15px */}
             <p className="text-[#FFD700] text-[15px]">D-DAY</p>
             <p className="text-white text-[10px] mt-1">
               D-{Math.max(0, Math.ceil((new Date('2026-04-30').getTime() - new Date().getTime()) / 86400000))}
@@ -1419,7 +1613,6 @@ export default function App() {
           </div>
           <div className="flex items-center gap-2">
             <div style={marioStyle}>
-              {/* 8px → 15px */}
               <p className="text-[#FFD700] text-[15px]">🔥 {myStreak}</p>
             </div>
             <button onClick={toggleBgm} className="p-1 bg-black/30 border-2 border-black">
@@ -1501,7 +1694,6 @@ export default function App() {
 
                 <div className="bg-[#000080] border-4 border-black p-3 shadow-[4px_4px_0px_black]">
                   <div className="flex items-center justify-between mb-2">
-                    {/* 8px → 15px */}
                     <span className="text-[#FFD700] text-[15px]" style={marioStyle}>🔥 STREAK BONUS</span>
                     <span className="text-white text-[15px]" style={marioStyle}>{myStreak} / 3 DAYS</span>
                   </div>
@@ -1515,7 +1707,6 @@ export default function App() {
                       <button
                         onClick={() => reduceHP(1, true)}
                         disabled={dragonHp <= 0 || attacking || ultimateActive}
-                        // 8px → 15px
                         className="py-3 bg-[#E52521] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 text-[15px]"
                         style={marioStyle}
                       >
@@ -1525,7 +1716,6 @@ export default function App() {
                       <button
                         onClick={() => reduceHP(2, true)}
                         disabled={dragonHp <= 0 || attacking || ultimateActive}
-                        // 8px → 15px
                         className="py-3 bg-[#E52521] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all disabled:opacity-50 text-[15px]"
                         style={marioStyle}
                       >
@@ -1609,7 +1799,6 @@ function RankingView() {
       </div>
       <div className="bg-[#000080] border-4 border-black shadow-[4px_4px_0px_black] overflow-hidden">
         {rankings.length === 0 && (
-          // 8px → 15px
           <p className="text-center text-white py-8 text-[15px]" style={marioStyle}>NO DATA YET...</p>
         )}
         {rankings.map((r, i) => (
@@ -1618,13 +1807,11 @@ function RankingView() {
               <span className="text-lg">{medals[i] ?? `${i + 1}.`}</span>
               <div>
                 <p className="text-white text-[10px]" style={marioStyle}>{r.name}</p>
-                {/* 7px → 13px */}
                 <p className="text-[#888] text-[13px]" style={marioStyle}>{r.clubId || 'NO GUILD'}</p>
               </div>
             </div>
             <div className="text-right">
               <p className="text-[#FFD700] text-[10px]" style={marioStyle}>{String(r.hpReduced).padStart(6, '0')}</p>
-              {/* 7px → 13px */}
               <p className="text-[#888] text-[13px]" style={marioStyle}>SCORE</p>
             </div>
           </div>
@@ -1649,7 +1836,6 @@ function AdminView() {
           <button
             key={t.key}
             onClick={() => setSubTab(t.key)}
-            // 8px → 15px
             className={`flex-1 py-2 border-4 border-black text-[15px] shadow-[3px_3px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all ${subTab === t.key ? 'bg-[#FFD700] text-black' : 'bg-[#000080] text-white'}`}
             style={marioStyle}
           >
@@ -1707,7 +1893,6 @@ function AdminUserManagement() {
   return (
     <div className="space-y-4">
       <button onClick={resetDragon}
-        // 8px → 15px
         className="w-full py-3 bg-[#E52521] text-white border-4 border-black shadow-[4px_4px_0px_black] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all text-[15px]"
         style={marioStyle}
       >
@@ -1719,7 +1904,6 @@ function AdminUserManagement() {
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           placeholder="NEW PLAYER"
-          // 8px → 15px
           className="flex-1 px-3 py-2 bg-black text-white border-4 border-white text-[15px] focus:outline-none focus:border-[#FFD700]"
           style={marioStyle}
         />
@@ -1731,12 +1915,10 @@ function AdminUserManagement() {
         {users.map((u) => (
           <div key={u.id} className="bg-[#000080] border-4 border-black p-3 space-y-2">
             <div className="flex justify-between items-center">
-              {/* 9px → 16px */}
               <span className="text-white text-[16px]" style={marioStyle}>{u.name}</span>
               <select
                 value={u.role}
                 onChange={(e) => updateRole(u.id, e.target.value as UserRole)}
-                // 8px → 15px
                 className="bg-black text-white text-[15px] px-1 py-1 border-2 border-white"
                 style={marioStyle}
               >
@@ -1750,7 +1932,6 @@ function AdminUserManagement() {
               <select
                 value={u.clubId || ''}
                 onChange={(e) => assignClub(u.id, e.target.value)}
-                // 8px → 15px
                 className="flex-1 bg-black text-white text-[15px] px-1 py-1 border-2 border-white"
                 style={marioStyle}
               >
@@ -1761,7 +1942,6 @@ function AdminUserManagement() {
               </select>
               <button
                 onClick={() => deleteUser(u.id)}
-                // 8px → 15px
                 className="px-2 py-1 bg-[#E52521] text-white border-2 border-black text-[15px] shadow-[2px_2px_0px_black] active:shadow-none"
                 style={marioStyle}
               >
@@ -1799,7 +1979,6 @@ function AdminClubManagement() {
           value={newClubName}
           onChange={(e) => setNewClubName(e.target.value)}
           placeholder="NEW GUILD"
-          // 8px → 15px
           className="flex-1 px-3 py-2 bg-black text-white border-4 border-white text-[15px] focus:outline-none focus:border-[#FFD700]"
           style={marioStyle}
         />
@@ -1810,7 +1989,6 @@ function AdminClubManagement() {
       <div className="space-y-2">
         {clubs.map((c) => (
           <div key={c.id} className="bg-[#000080] border-4 border-black p-3 flex justify-between items-center">
-            {/* 9px → 16px */}
             <span className="text-white text-[16px]" style={marioStyle}>{c.name}</span>
             <Users className="w-4 h-4 text-[#FFD700]" />
           </div>
@@ -1834,7 +2012,6 @@ function AdminUserStatus() {
       <table className="w-full text-left">
         <thead className="bg-[#E52521]">
           <tr>
-            {/* 7px → 13px */}
             <th className="p-2 text-white text-[13px]" style={marioStyle}>NAME</th>
             <th className="p-2 text-white text-[13px]" style={marioStyle}>SCORE</th>
             <th className="p-2 text-white text-[13px]" style={marioStyle}>🔥</th>
@@ -1843,7 +2020,6 @@ function AdminUserStatus() {
         <tbody>
           {users.map((u) => (
             <tr key={u.id} className="border-t-2 border-black/30">
-              {/* 8px → 15px */}
               <td className="p-2 text-white text-[15px]" style={marioStyle}>{u.name}</td>
               <td className="p-2 text-[#FFD700] text-[15px]" style={marioStyle}>{String(u.hpReduced).padStart(6, '0')}</td>
               <td className="p-2 text-white text-[15px]" style={marioStyle}>{u.streak ?? 0}</td>
@@ -1886,7 +2062,6 @@ function PresidentView({ clubId }: { clubId: string }) {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
       <div className="bg-[#E52521] border-4 border-black p-3 shadow-[4px_4px_0px_black] flex justify-between items-center">
         <h2 className="text-[#FFD700] text-[10px]" style={marioStyle}>👥 MY GUILD</h2>
-        {/* 8px → 15px */}
         <span className="text-white text-[15px]" style={marioStyle}>{clubId}</span>
       </div>
       <div className="flex gap-2">
@@ -1895,7 +2070,6 @@ function PresidentView({ clubId }: { clubId: string }) {
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           placeholder="NEW MEMBER"
-          // 8px → 15px
           className="flex-1 px-3 py-2 bg-black text-white border-4 border-white text-[15px] focus:outline-none focus:border-[#FFD700]"
           style={marioStyle}
         />
@@ -1905,7 +2079,6 @@ function PresidentView({ clubId }: { clubId: string }) {
       </div>
       <div className="bg-[#000080] border-4 border-black shadow-[4px_4px_0px_black] overflow-hidden">
         {members.length === 0 && (
-          // 8px → 15px
           <p className="text-center text-white py-8 text-[15px]" style={marioStyle}>NO MEMBERS YET</p>
         )}
         {members.map((m) => (
@@ -1915,14 +2088,11 @@ function PresidentView({ clubId }: { clubId: string }) {
                 <span className="text-white text-xs font-bold">{m.name[0]}</span>
               </div>
               <div>
-                {/* 9px → 16px */}
                 <p className="text-white text-[16px]" style={marioStyle}>{m.name}</p>
-                {/* 7px → 13px */}
                 <p className="text-[#888] text-[13px]" style={marioStyle}>{m.role.toUpperCase()}</p>
               </div>
             </div>
             <div className="text-right">
-              {/* 9px → 16px */}
               <p className="text-[#FFD700] text-[16px]" style={marioStyle}>{String(m.hpReduced).padStart(6, '0')}</p>
             </div>
           </div>
